@@ -151,12 +151,13 @@
         window.initNewsSlider(section);
       }
     } catch (err) {
+      var stub =
+        "Новости сейчас недоступны. Загляните позже — мы обязательно что-нибудь расскажем.";
       if (statusEl) {
-        statusEl.textContent =
-          "Не удалось загрузить новости. Проверьте API и CORS.";
+        statusEl.textContent = stub;
       } else {
         root.innerHTML =
-          '<p class="news-fetch-status">Не удалось загрузить новости.</p>';
+          '<p class="news-fetch-status">' + escapeHtml(stub) + "</p>";
       }
     }
   }
