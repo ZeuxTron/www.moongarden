@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonGarden — Сайт</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="website.css?v=20260469" />
+  </head>
+  <body>
+    <div class="site-root">
+      <div class="site-shell" id="top">
+        <header class="site-header">
+          <div class="site-header__inner">
+            <a class="brand" href="#top">
+              <img
+                class="product-mark product-mark--brand"
+                src="site/product.png"
+                width="28"
+                height="28"
+                alt=""
+                decoding="async"
+              />
+              MoonGarden
+            </a>
+            <nav aria-label="Основное меню">
+              <ul class="nav-links">
+                <li><a href="#top">Главная</a></li>
+                <li><a href="#features">О сервере</a></li>
+                <li><a href="#gallery">Галерея</a></li>
+                <li><a href="#news">Новости</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contacts">Контакты</a></li>
+              </ul>
+            </nav>
+            <div class="site-header__actions">
+              <div class="site-header__auth">
+                <button
+                  type="button"
+                  class="btn btn--ghost"
+                  id="header-auth-btn"
+                  data-auth-open="login"
+                  aria-haspopup="dialog"
+                  aria-controls="account-modal"
+                >
+                  Войти
+                </button>
+              </div>
+              <a class="btn btn--primary" data-mg-launcher-download href="downloads/MoonGarden-Launcher-Setup.exe">Скачать лаунчер</a>
+            </div>
+          </div>
+        </header>
+
+        <div class="site-scroll-area" data-site-scroll-area>
+        <section class="hero" id="about">
+          <div class="hero__bg" aria-hidden="true"></div>
+          <div class="hero__content">
+            <img class="hero__logo" src="site/logo.png" alt="MoonGarden" decoding="async" />
+            <h1 class="hero__tagline">Мир, где магия встречает технологии</h1>
+            <p class="hero__text">
+              Исследуй, создавай, автоматизируй и выживай в уникальном фэнтези-мире вместе с друзьями.
+            </p>
+            <div class="hero__actions">
+              <a class="btn btn--primary" href="#start">Начать игру</a>
+              <a class="btn btn--ghost" href="#features">Подробнее о сервере</a>
+            </div>
+          </div>
+        </section>
+
+        <main>
+          <section class="content-section" id="features" aria-labelledby="feat-title">
+            <h2 class="section-title" id="feat-title">Особенности сервера</h2>
+            <div class="feature-grid">
+              <article class="feature-card">
+                <div class="feature-card__icon" aria-hidden="true">
+                  <img class="product-mark product-mark--feature" src="site/product.png" width="24" height="24" alt="" decoding="async" />
+                </div>
+                <h3>Магия и кристаллы</h3>
+                <p>Модули мистических кристаллов и механики ритуалов.</p>
+              </article>
+              <article class="feature-card">
+                <div class="feature-card__icon" aria-hidden="true">
+                  <img src="site/feature-3.png" alt="" decoding="async" />
+                </div>
+                <h3>Автоматизация</h3>
+                <p>Создавай сложные системы и автоматизируй производство.</p>
+              </article>
+              <article class="feature-card">
+                <div class="feature-card__icon" aria-hidden="true">
+                  <img src="site/feature-4.png" alt="" decoding="async" />
+                </div>
+                <h3>Исследование</h3>
+                <p>Открывай новые земли, измерения и тайны мира MoonGarden.</p>
+              </article>
+              <article class="feature-card">
+                <div class="feature-card__icon" aria-hidden="true">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                  </svg>
+                </div>
+                <h3>Уникальные механики</h3>
+                <p>Кастомные события, квесты и внутриигровая активность.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="content-section content-section--slider" id="gallery" aria-labelledby="gal-title">
+            <h2 class="section-title" id="gal-title">Скриншоты</h2>
+            <button
+              type="button"
+              class="gallery-nav gallery-nav--prev content-section__slider-nav content-section__slider-nav--prev"
+              data-gallery-prev
+              aria-label="Предыдущий слайд"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              class="gallery-nav gallery-nav--next content-section__slider-nav content-section__slider-nav--next"
+              data-gallery-next
+              aria-label="Следующий слайд"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+            <div class="gallery-wrap">
+              <div class="gallery">
+                <button type="button" class="gallery-shot is-active" data-index="0">
+                  <img src="site/gallery-shot1.png" alt="Скриншот 1" decoding="async" />
+                </button>
+                <button type="button" class="gallery-shot" data-index="1">
+                  <img src="site/gallery-shot2.png" alt="Скриншот 2" decoding="async" />
+                </button>
+                <button type="button" class="gallery-shot" data-index="2">
+                  <img src="site/gallery-shot3.png" alt="Скриншот 3" decoding="async" />
+                </button>
+                <button type="button" class="gallery-shot" data-index="3">
+                  <img src="site/gallery-shot4.png" alt="Скриншот 4" decoding="async" />
+                </button>
+              </div>
+              <div class="gallery-dots" data-gallery-dots>
+                <button type="button" data-index="0" class="is-active" aria-label="Слайд 1"></button>
+                <button type="button" data-index="1" aria-label="Слайд 2"></button>
+                <button type="button" data-index="2" aria-label="Слайд 3"></button>
+                <button type="button" data-index="3" aria-label="Слайд 4"></button>
+              </div>
+            </div>
+          </section>
+
+          <section class="content-section content-section--news content-section--slider" id="news" aria-labelledby="news-title">
+            <h2 class="section-title" id="news-title">Новости</h2>
+            <div class="news-wrap" id="news-root">
+              <p class="news-fetch-status" id="news-fetch-status">Загрузка новостей…</p>
+            </div>
+          </section>
+
+          <section class="content-section" id="start" aria-labelledby="start-title">
+            <h2 class="section-title" id="start-title">Как начать?</h2>
+            <div class="steps">
+              <article class="step-card">
+                <div class="step-num">1</div>
+                <h3>Зарегистрируйся</h3>
+                <p>
+                  Создай аккаунт на сайте — позже он привяжется к игре. Нажми «Войти» в шапке и выбери регистрацию в окне.
+                </p>
+              </article>
+              <article class="step-card">
+                <div class="step-num">2</div>
+                <h3>Скачай лаунчер</h3>
+                <p>Загрузи наш лаунчер и установи сборку.</p>
+              </article>
+              <article class="step-card">
+                <div class="step-num">3</div>
+                <h3>Войди в игру</h3>
+                <p>Авторизуйся и выбери сервер MoonGarden.</p>
+              </article>
+              <article class="step-card">
+                <div class="step-num">4</div>
+                <h3>Играй!</h3>
+                <p>Отправляйся в приключение вместе с нами!</p>
+              </article>
+            </div>
+          </section>
+        </main>
+
+        <footer class="site-footer" id="contacts">
+          <div class="site-footer__wrap">
+            <div class="server-card-inner site-footer-card">
+              <div class="server-card-head site-footer-head">
+                <span class="product-mark-box product-mark-box--site" aria-hidden="true">
+                  <img
+                    class="product-mark product-mark--site"
+                    src="site/product.png"
+                    width="44"
+                    height="44"
+                    alt=""
+                    decoding="async"
+                  />
+                </span>
+                <div class="server-card-main">
+                  <div class="server-card-title-row">
+                    <span class="site-footer-brand">MoonGarden</span>
+                  </div>
+                  <p class="site-footer-tagline">© 2026 MoonGarden. Все права защищены.</p>
+                </div>
+              </div>
+              <div class="server-meta-panel">
+                <dl class="server-meta site-footer-meta" id="faq">
+                  <div>
+                    <dt>Соцсети</dt>
+                    <dd>
+                      <nav class="site-footer-links-row" aria-label="Соцсети">
+                        <a href="#">Discord</a>
+                        <a href="#">Telegram</a>
+                      </nav>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Документы</dt>
+                    <dd>
+                      <nav class="site-footer-links-row" aria-label="Документы">
+                        <a href="#">Правила</a>
+                        <a href="#">Конфиденциальность</a>
+                      </nav>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Клиент</dt>
+                    <dd><a class="site-footer-cta" data-mg-launcher-download href="downloads/MoonGarden-Launcher-Setup.exe">Скачать лаунчер</a></dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </footer>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="site-modal"
+      id="account-modal"
+      hidden
+      aria-hidden="true"
+      role="presentation"
+    >
+      <div class="site-modal__backdrop" data-account-close tabindex="-1" aria-hidden="true"></div>
+      <div
+        class="site-modal__panel site-modal__panel--auth"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="account-modal-title"
+        tabindex="-1"
+      >
+        <div class="site-modal__head">
+          <h2 class="site-modal__title" id="account-modal-title">Вход</h2>
+          <div class="auth-segmented" id="auth-segmented-head" role="tablist" aria-label="Вход или регистрация">
+            <button
+              type="button"
+              class="auth-segment is-active"
+              role="tab"
+              id="tab-auth-login"
+              data-auth-segment="login"
+              aria-selected="true"
+              aria-controls="auth-view-login"
+            >
+              Вход
+            </button>
+            <button
+              type="button"
+              class="auth-segment"
+              role="tab"
+              id="tab-auth-register"
+              data-auth-segment="register"
+              aria-selected="false"
+              aria-controls="auth-view-register"
+              tabindex="-1"
+            >
+              Регистрация
+            </button>
+          </div>
+          <button type="button" class="site-modal__x" data-account-close aria-label="Закрыть окно">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="account-panel" id="account-guest" hidden>
+          <div class="auth-view" id="auth-view-login" role="tabpanel" aria-labelledby="tab-auth-login" hidden>
+            <p class="account-lead">
+              Войдите под игровым ником — здесь настраивается профиль и пресет для лаунчера MoonGarden.
+            </p>
+            <form class="account-form" id="form-login" autocomplete="username">
+              <label class="account-field">
+                <span class="account-label">Игровой ник</span>
+                <input
+                  type="text"
+                  name="nickname"
+                  required
+                  class="account-input"
+                  autocomplete="username"
+                  minlength="3"
+                  maxlength="16"
+                  pattern="[a-zA-Z0-9_]+"
+                  title="Латиница, цифры и _, от 3 до 16 символов"
+                />
+              </label>
+              <label class="account-field">
+                <span class="account-label">Пароль</span>
+                <input type="password" name="password" required class="account-input" autocomplete="current-password" />
+              </label>
+              <p class="account-hint" id="account-msg-login" role="status"></p>
+              <button type="submit" class="btn btn--primary account-submit">Войти</button>
+            </form>
+            <p class="account-auth-switch">
+              Нет аккаунта?
+              <button type="button" class="account-link" data-auth-switch="register">Создать аккаунт MoonGarden</button>
+            </p>
+          </div>
+
+          <div class="auth-view" id="auth-view-register" role="tabpanel" aria-labelledby="tab-auth-register" hidden>
+            <p class="account-lead">
+              Зарегистрируйте аккаунт на сайте. Используйте ник в формате Minecraft — так проще перенести его в игру и
+              лаунчер.
+            </p>
+            <form class="account-form" id="form-register" autocomplete="off">
+              <label class="account-field">
+                <span class="account-label">Игровой ник</span>
+                <input
+                  type="text"
+                  name="nickname"
+                  required
+                  class="account-input"
+                  autocomplete="username"
+                  minlength="3"
+                  maxlength="16"
+                  pattern="[a-zA-Z0-9_]+"
+                  title="Латиница, цифры и _, от 3 до 16 символов"
+                />
+              </label>
+              <label class="account-field">
+                <span class="account-label">Пароль</span>
+                <input type="password" name="password" required class="account-input" autocomplete="new-password" />
+              </label>
+              <label class="account-field">
+                <span class="account-label">Повтор пароля</span>
+                <input type="password" name="password2" required class="account-input" autocomplete="new-password" />
+              </label>
+              <p class="account-hint" id="account-msg-register" role="status"></p>
+              <button type="submit" class="btn btn--primary account-submit">Создать аккаунт</button>
+            </form>
+            <p class="account-auth-switch">
+              Уже регистрировались?
+              <button type="button" class="account-link" data-auth-switch="login">Войти в аккаунт</button>
+            </p>
+          </div>
+        </div>
+
+        <div class="account-panel account-panel--cabinet" id="account-cabinet" hidden>
+          <div class="cabinet-layout">
+            <aside class="cabinet-aside">
+              <div class="cabinet-server-tag" aria-hidden="true">MoonGarden</div>
+              <div class="skin-preview skin-preview--mc" id="skin-preview">
+                <div class="skin-preview__checker" aria-hidden="true"></div>
+                <div class="skin-preview__figure-wrap skin-preview__figure-wrap--3d">
+                  <canvas class="skin-preview__canvas" id="skin-preview-canvas" width="220" height="300"></canvas>
+                </div>
+                <span class="skin-preview__caption" id="skin-preview-label"></span>
+              </div>
+              <p class="skin-preview__hint">
+                Просмотр активного скина в 3D. Загрузите скины в слоты справа и быстро переключайте их.
+              </p>
+              <div class="cabinet-actions cabinet-actions--aside">
+                <button type="button" class="btn btn--ghost" id="account-change-password">Сменить пароль</button>
+                <a class="btn btn--primary" data-mg-launcher-download href="downloads/MoonGarden-Launcher-Setup.exe">Скачать лаунчер</a>
+                <button type="button" class="btn btn--ghost" id="account-logout">Выйти из аккаунта</button>
+              </div>
+            </aside>
+            <div class="cabinet-main">
+              <div class="cabinet-profile-head">
+                <h3 class="cabinet-section-title">Игровой профиль</h3>
+                <div class="cabinet-nick-row">
+                  <div class="cabinet-nick-line">
+                    <span class="cabinet-inline-label">Ник:</span>
+                    <strong id="cabinet-nickname"></strong>
+                  </div>
+                  <div class="cabinet-profile-actions">
+                    <button type="button" class="btn btn--ghost" id="account-change-nick">Сменить ник</button>
+                  </div>
+                </div>
+                <div class="cabinet-model-row">
+                  <span class="cabinet-inline-label" id="cabinet-model-label">Модель: Steve (классика)</span>
+                  <div class="cabinet-model-picker">
+                    <button
+                      type="button"
+                      class="cabinet-model-picker__trigger"
+                      id="cabinet-model-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                    >
+                      <span id="cabinet-model-current">Сменить модель</span>
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    <div class="play-dropdown cabinet-model-picker__menu" id="cabinet-model-menu" role="listbox">
+                      <button type="button" role="option" data-model-option="steve">Steve (классика)</button>
+                      <button type="button" role="option" data-model-option="alex">Alex (slim)</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <dl class="cabinet-meta">
+                <div>
+                  <dt>Регистрация на сайте</dt>
+                  <dd><time id="cabinet-joined"></time></dd>
+                </div>
+                <div>
+                  <dt>Сервер</dt>
+                  <dd>MoonGarden</dd>
+                </div>
+              </dl>
+              <div class="cabinet-mini-modal" id="cabinet-change-nick-modal" hidden>
+                <div class="cabinet-mini-modal__backdrop" data-cabinet-modal-close="nick"></div>
+                <form class="cabinet-mini-modal__panel" id="cabinet-change-nick-form">
+                  <h4 class="cabinet-mini-modal__title">Сменить ник</h4>
+                  <label class="account-field">
+                    <span class="account-label">Новый ник</span>
+                    <input
+                      type="text"
+                      name="newNick"
+                      required
+                      class="account-input"
+                      minlength="3"
+                      maxlength="16"
+                      pattern="[a-zA-Z0-9_]+"
+                      title="Латиница, цифры и _, от 3 до 16 символов"
+                    />
+                  </label>
+                  <p class="account-hint" id="cabinet-change-nick-hint" role="status"></p>
+                  <div class="cabinet-mini-modal__actions">
+                    <button type="button" class="btn btn--ghost" data-cabinet-modal-close="nick">Отмена</button>
+                    <button type="submit" class="btn btn--primary">Сохранить</button>
+                  </div>
+                </form>
+              </div>
+              <div class="cabinet-mini-modal" id="cabinet-change-password-modal" hidden>
+                <div class="cabinet-mini-modal__backdrop" data-cabinet-modal-close="password"></div>
+                <form class="cabinet-mini-modal__panel" id="cabinet-change-password-form">
+                  <h4 class="cabinet-mini-modal__title">Сменить пароль</h4>
+                  <label class="account-field">
+                    <span class="account-label">Текущий пароль</span>
+                    <input type="password" name="oldPassword" required class="account-input" />
+                  </label>
+                  <label class="account-field">
+                    <span class="account-label">Новый пароль</span>
+                    <input type="password" name="newPassword" required class="account-input" />
+                  </label>
+                  <label class="account-field">
+                    <span class="account-label">Повторите новый пароль</span>
+                    <input type="password" name="repeatPassword" required class="account-input" />
+                  </label>
+                  <p class="account-hint" id="cabinet-change-password-hint" role="status"></p>
+                  <div class="cabinet-mini-modal__actions">
+                    <button type="button" class="btn btn--ghost" data-cabinet-modal-close="password">Отмена</button>
+                    <button type="submit" class="btn btn--primary">Сохранить</button>
+                  </div>
+                </form>
+              </div>
+              <div class="cabinet-mini-modal" id="cabinet-skin-clear-modal" hidden>
+                <div class="cabinet-mini-modal__backdrop" data-cabinet-modal-close="skin-clear"></div>
+                <form class="cabinet-mini-modal__panel" id="cabinet-skin-clear-form">
+                  <h4 class="cabinet-mini-modal__title">Очистить слот?</h4>
+                  <p class="cabinet-section-desc">
+                    Скин в выбранном слоте будет удалён. Это действие можно отменить сейчас.
+                  </p>
+                  <div class="cabinet-mini-modal__actions">
+                    <button type="button" class="btn btn--ghost" data-cabinet-modal-close="skin-clear">Отмена</button>
+                    <button type="submit" class="btn btn--primary">Очистить</button>
+                  </div>
+                </form>
+              </div>
+              <div class="cabinet-skin-section">
+                <h3 class="cabinet-section-title cabinet-section-title--spaced">Скин игрока</h3>
+                <p class="cabinet-section-desc">
+                  6 слотов для быстрого свапа. Пустой слот — загрузка, занятый — применить или заменить.
+                </p>
+                <fieldset class="skin-grid">
+                  <legend class="visually-hidden">Слоты скинов</legend>
+                  <div class="skin-grid__inner" id="skin-options"></div>
+                  <input
+                    class="visually-hidden"
+                    id="skin-slot-upload"
+                    type="file"
+                    accept="image/png"
+                  />
+                  <div class="skin-slot-actions" id="skin-slot-actions" hidden>
+                    <button type="button" class="btn btn--primary" id="skin-slot-apply">Применить</button>
+                    <button type="button" class="btn btn--ghost" id="skin-slot-replace">Заменить</button>
+                    <button type="button" class="btn btn--ghost" id="skin-slot-remove">Очистить слот</button>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-toast" id="site-toast" hidden>
+      <div class="site-toast__body" id="site-toast-body"></div>
+    </div>
+
+    <script src="https://unpkg.com/skinview3d@3.2.0/bundles/skinview3d.bundle.js"></script>
+    <script src="api-config.js?v=1"></script>
+    <script src="website-account.js?v=1"></script>
+    <script src="website.js?v=20260473"></script>
+    <script src="website-news.js?v=1"></script>
+  </body>
+</html>

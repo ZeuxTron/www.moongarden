@@ -134,18 +134,18 @@
   go(0);
 })();
 
-(function () {
-  var slides = document.querySelectorAll("[data-news-slide]");
-  var track = document.querySelector("[data-news-track]");
-  var viewport = document.querySelector(".news-slider-viewport");
-  var prevBtns = document.querySelectorAll("[data-news-prev]");
-  var nextBtns = document.querySelectorAll("[data-news-next]");
-  var dotsRoot = document.querySelector("[data-news-dots]");
-  var newsSection = document.querySelector("#news");
+window.initNewsSlider = function (newsSection) {
+  if (!newsSection) return;
+  var slides = newsSection.querySelectorAll("[data-news-slide]");
+  var track = newsSection.querySelector("[data-news-track]");
+  var viewport = newsSection.querySelector(".news-slider-viewport");
+  var prevBtns = newsSection.querySelectorAll("[data-news-prev]");
+  var nextBtns = newsSection.querySelectorAll("[data-news-next]");
+  var dotsRoot = newsSection.querySelector("[data-news-dots]");
 
   if (!slides.length || !track) return;
 
-  if (newsSection) newsSection.style.setProperty("--news-slides", String(slides.length));
+  newsSection.style.setProperty("--news-slides", String(slides.length));
 
   var index = 0;
   var autoTimer = null;
@@ -308,6 +308,17 @@
   }
 
   go(indexFromHash());
+};
+
+(function () {
+  function applyLauncherDownloadUrl() {
+    var u =
+      typeof window.__MG_LAUNCHER_DOWNLOAD_URL__ === "string" &&
+      window.__MG_LAUNCHER_DOWNLOAD_URL__.trim();
+    if (!u) return;
+    document.querySelectorAll("a[data-mg-launcher-download]").forEach(function (a) {
+      a.setAttribute("href", u.trim());
+    });
+  }
+  applyLauncherDownloadUrl();
 })();
-
-
