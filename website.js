@@ -310,3 +310,15 @@ window.initNewsSlider = function (newsSection) {
   go(indexFromHash());
 };
 
+(function () {
+  function applyLauncherDownloadUrl() {
+    var u =
+      typeof window.__MG_LAUNCHER_DOWNLOAD_URL__ === "string" &&
+      window.__MG_LAUNCHER_DOWNLOAD_URL__.trim();
+    if (!u) return;
+    document.querySelectorAll("a[data-mg-launcher-download]").forEach(function (a) {
+      a.setAttribute("href", u.trim());
+    });
+  }
+  applyLauncherDownloadUrl();
+})();
