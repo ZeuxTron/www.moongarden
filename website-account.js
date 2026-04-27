@@ -13,6 +13,7 @@
   var viewLogin = document.getElementById("auth-view-login");
   var viewRegister = document.getElementById("auth-view-register");
   var headerAuthBtn = document.getElementById("header-auth-btn");
+  var cabinetAdminTag = document.getElementById("cabinet-admin-tag");
   var cabinetNick = document.getElementById("cabinet-nickname");
   var cabinetJoined = document.getElementById("cabinet-joined");
   var skinPreviewCanvas = document.getElementById("skin-preview-canvas");
@@ -227,6 +228,8 @@
 
   function syncHeader() {
     var nick = getSession();
+    headerAuthBtn.classList.remove("is-auth-loading");
+    headerAuthBtn.setAttribute("aria-busy", "false");
     if (nick) {
       headerAuthBtn.textContent = "Личный кабинет";
       headerAuthBtn.setAttribute("data-auth-open", "cabinet");
@@ -366,6 +369,7 @@
     msgRegister.textContent = "";
     if (cabinetModelMenu) cabinetModelMenu.classList.remove("is-open");
     if (cabinetModelTrigger) cabinetModelTrigger.setAttribute("aria-expanded", "false");
+    if (cabinetAdminTag) cabinetAdminTag.hidden = true;
 
     window.requestAnimationFrame(function () {
       try {
@@ -403,6 +407,9 @@
     modalTitle.textContent = "Личный кабинет";
     modalTitle.classList.remove("visually-hidden");
     cabinetNick.textContent = lastMe.username;
+    if (cabinetAdminTag) {
+      cabinetAdminTag.hidden = !Boolean(lastMe.isAdmin);
+    }
 
     if (cabinetJoined) {
       var iso = lastMe.joinedAt;
@@ -912,5 +919,7 @@
     syncHeader();
   }
 
+  // Show consistent header label from stored session immediately, then refine after refresh/me.
+  syncHeader();
   bootstrapSession();
 })();
