@@ -30,15 +30,29 @@
       .admin-top-actions {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         margin-bottom: 14px;
       }
       .admin-top-actions .admin-mode-switch {
         margin-bottom: 0;
+        flex: 1;
+        min-width: 0;
       }
-      .admin-top-actions .admin-back-link {
-        margin-left: auto;
+      .admin-panel-close {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        line-height: 1;
+      }
+      .admin-panel-close svg {
+        display: block;
       }
       .admin-news-page .admin-hint {
         color: var(--text-muted, #888);
@@ -51,7 +65,7 @@
       }
       @media (min-width: 900px) {
         .admin-news-grid {
-          grid-template-columns: minmax(0, 1.38fr) minmax(0, 0.92fr);
+          grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.28fr);
           align-items: start;
         }
       }
@@ -153,6 +167,7 @@
       }
       .admin-mode-switch {
         display: inline-flex;
+        flex-wrap: wrap;
         gap: 8px;
         padding: 4px;
         border-radius: 10px;
@@ -280,6 +295,21 @@
       #admin-media-park {
         display: none;
       }
+      @keyframes admin-media-pulse {
+        0%,
+        100% {
+          outline-color: rgba(147, 197, 253, 0.25);
+        }
+        50% {
+          outline-color: rgba(147, 197, 253, 0.85);
+        }
+      }
+      #admin-media-root.admin-media-root--pulse {
+        outline: 2px solid rgba(147, 197, 253, 0.5);
+        outline-offset: 6px;
+        border-radius: 14px;
+        animation: admin-media-pulse 0.55s ease 2;
+      }
     </style>
   </head>
   <body>
@@ -291,7 +321,16 @@
             <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
             <button type="button" class="btn btn--ghost" data-admin-mode-btn="servers">Серверы</button>
           </div>
-          <a class="btn btn--ghost admin-back-link" href="index.html">Назад</a>
+          <a
+            class="btn btn--ghost admin-panel-close"
+            href="index.html"
+            aria-label="Закрыть панель, на главную"
+            title="На главную"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </a>
         </div>
         <h1>Панель контента</h1>
         <p class="admin-hint" id="admin-hint"></p>
@@ -329,7 +368,14 @@
                   <span>Картинка (выбор из галереи или URL)</span>
                   <input id="f-image-id" name="imageId" type="hidden" />
                   <div class="admin-actions" style="margin-top: 0">
-                    <button type="button" class="btn btn--ghost" id="news-pick-image">Выбрать из галереи</button>
+                    <button
+                      type="button"
+                      class="btn btn--ghost"
+                      id="news-pick-image"
+                      title="Показать медиа-библиотеку справа и выбрать файл"
+                    >
+                      Выбрать из галереи
+                    </button>
                   </div>
                   <input id="f-image" name="imageUrl" type="url" placeholder="https://..." />
                   <img id="f-image-preview" class="admin-media-preview" hidden alt="" />
@@ -383,7 +429,14 @@
                   <span>Картинка (выбор из галереи или URL)</span>
                   <input id="shot-image-id" name="imageId" type="hidden" />
                   <div class="admin-actions" style="margin-top: 0">
-                    <button type="button" class="btn btn--ghost" id="shot-pick-image">Выбрать из галереи</button>
+                    <button
+                      type="button"
+                      class="btn btn--ghost"
+                      id="shot-pick-image"
+                      title="Показать медиа-библиотеку справа и выбрать файл"
+                    >
+                      Выбрать из галереи
+                    </button>
                   </div>
                   <input id="shot-url" name="imageUrl" type="url" required placeholder="https://..." />
                   <img id="shot-image-preview" class="admin-media-preview" hidden alt="" />
@@ -500,6 +553,6 @@
       </div>
     </div>
     <script src="api-config.js?v=1"></script>
-    <script src="admin-news.js?v=20260481"></script>
+    <script src="admin-news.js?v=20260482"></script>
   </body>
 </html>

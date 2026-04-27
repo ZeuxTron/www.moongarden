@@ -559,9 +559,20 @@
   }
 
   function focusMediaSection() {
-    if (mediaRoot && mediaRoot.scrollIntoView) {
-      mediaRoot.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (!mediaRoot) return;
+    var heading = mediaRoot.querySelector(".admin-panel__section h3");
+    var scrollEl = heading || mediaRoot;
+    if (scrollEl.scrollIntoView) {
+      scrollEl.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
     }
+    mediaRoot.classList.remove("admin-media-root--pulse");
+    void mediaRoot.offsetWidth;
+    mediaRoot.classList.add("admin-media-root--pulse");
+    if (mediaRoot._mgPulseTimer) clearTimeout(mediaRoot._mgPulseTimer);
+    mediaRoot._mgPulseTimer = setTimeout(function () {
+      mediaRoot.classList.remove("admin-media-root--pulse");
+      mediaRoot._mgPulseTimer = null;
+    }, 1400);
   }
 
   function setMediaTarget(target) {

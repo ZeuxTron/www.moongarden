@@ -172,7 +172,7 @@
       heroClass +
       '" src="' +
       imgUrl +
-      '" width="1200" height="675" alt="" decoding="async" title="Открыть в полный размер" />' +
+      '" width="1200" height="675" alt="" decoding="async" referrerpolicy="no-referrer" title="Открыть в полный размер" />' +
       '<p class="site-news-lead">' +
       excerpt +
       "</p>" +
