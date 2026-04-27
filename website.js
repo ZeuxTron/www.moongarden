@@ -379,8 +379,9 @@ window.initGallerySlider = function () {
     for (var s = 0; s < shots.length; s++) {
       var img = shots[s].querySelector("img");
       if (!img) continue;
+      var lb = img.getAttribute("data-lightbox-src");
       out.push({
-        src: img.currentSrc || img.src || "",
+        src: (lb && lb.trim()) || img.currentSrc || img.src || "",
         alt: img.getAttribute("alt") || "",
       });
     }

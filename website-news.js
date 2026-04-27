@@ -10,7 +10,8 @@
     var hero = e.target.closest(".site-news__hero");
     if (!hero || !section.contains(hero)) return;
     if (!window.siteLightbox || typeof window.siteLightbox.open !== "function") return;
-    var src = hero.currentSrc || hero.src;
+    var lb = hero.getAttribute("data-lightbox-src");
+    var src = (lb && lb.trim()) || hero.currentSrc || hero.src;
     if (!src) return;
     var art = hero.closest(".site-news-article");
     var titleEl = art && art.querySelector(".site-news-title");
@@ -136,7 +137,8 @@
     var slug = escapeHtml(item.slug);
     var title = escapeHtml(item.title);
     var excerpt = escapeHtml(item.excerpt);
-    var imgUrl = escapeHtml(absApiUrl(item.imageUrl));
+    var imgFull = escapeHtml(absApiUrl(item.imageUrl));
+    var imgThumb = escapeHtml(absApiUrl(item.imageThumbUrl || item.imageUrl));
     var heroClass = heroClassForItem(item, index);
     var paras = String(item.body || "")
       .split(/\n\s*\n/)
@@ -179,7 +181,9 @@
       '<img class="site-news__hero ' +
       heroClass +
       '" src="' +
-      imgUrl +
+      imgThumb +
+      '" data-lightbox-src="' +
+      imgFull +
       '" width="1200" height="675" alt="" decoding="async" referrerpolicy="no-referrer" title="Открыть в полный размер" />' +
       '<p class="site-news-lead">' +
       excerpt +

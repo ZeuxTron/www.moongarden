@@ -20,6 +20,9 @@
   var fBody = document.getElementById("f-body");
   var fDate = document.getElementById("f-date");
   var fHeroLayout = document.getElementById("f-hero-layout");
+  var fHeroLayoutTrigger = document.getElementById("f-hero-layout-trigger");
+  var fHeroLayoutMenu = document.getElementById("f-hero-layout-menu");
+  var fHeroLayoutLabel = document.getElementById("f-hero-layout-label");
   var fImage = document.getElementById("f-image");
   var fImageId = document.getElementById("f-image-id");
   var fImagePreview = document.getElementById("f-image-preview");
@@ -83,6 +86,32 @@
   var newsCache = [];
   var previewIndex = 0;
   var bodyPreviewTimer = null;
+
+  var HERO_LAYOUT_LABELS = {
+    tl: "Слева сверху у текста",
+    lc: "Слева, ниже (по центру колонки)",
+    br: "Справа снизу",
+  };
+
+  function closeHeroLayoutMenu() {
+    if (fHeroLayoutMenu) fHeroLayoutMenu.classList.remove("is-open");
+    if (fHeroLayoutTrigger) fHeroLayoutTrigger.setAttribute("aria-expanded", "false");
+  }
+
+  function setHeroLayoutValue(raw) {
+    if (!fHeroLayout) return;
+    var k = String(raw || "").toLowerCase();
+    if (k !== "lc" && k !== "br") k = "tl";
+    fHeroLayout.value = k;
+    if (fHeroLayoutLabel) fHeroLayoutLabel.textContent = HERO_LAYOUT_LABELS[k] || HERO_LAYOUT_LABELS.tl;
+    var opts = document.querySelectorAll("[data-hero-layout]");
+    for (var oi = 0; oi < opts.length; oi++) {
+      var btn = opts[oi];
+      var v = btn.getAttribute("data-hero-layout");
+      btn.classList.toggle("is-selected", v === k);
+    }
+    if (previewIndex === 0) renderNewsPreview();
+  }
 
   function token() {
     try {
@@ -279,7 +308,7 @@
     fExcerpt.value = "";
     fBody.value = "";
     fDate.value = "";
-    if (fHeroLayout) fHeroLayout.value = "tl";
+    setHeroLayoutValue("tl");
     fImageId.value = "";
     fImage.value = "";
     if (fImagePreview) {
@@ -583,10 +612,7 @@
     } catch (e) {}
     fImage.value = "";
     fImageId.value = item.imageId || "";
-    if (fHeroLayout) {
-      var hl = String(item.heroLayout || "").toLowerCase();
-      fHeroLayout.value = hl === "lc" || hl === "br" ? hl : "tl";
-    }
+    setHeroLayoutValue(item.heroLayout);
     setPreview(fImagePreview, item.imageUrl || "");
     formTitle.textContent = "Редактирование: " + item.slug;
     setFormMsg("");
@@ -891,10 +917,32 @@
   if (fBody) {
     fBody.addEventListener("input", scheduleBodyPreview);
   }
-  if (fHeroLayout) {
-    fHeroLayout.addEventListener("change", function () {
-      if (previewIndex === 0) renderNewsPreview();
+  if (fHeroLayoutTrigger && fHeroLayoutMenu) {
+    fHeroLayoutTrigger.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var open = fHeroLayoutMenu.classList.toggle("is-open");
+      fHeroLayoutTrigger.setAttribute("aria-expanded", open ? "true" : "false");
     });
+    document.addEventListener("click", function (e) {
+      if (
+        fHeroLayoutMenu.classList.contains("is-open") &&
+        !fHeroLayoutMenu.contains(e.target) &&
+        !fHeroLayoutTrigger.contains(e.target)
+      ) {
+        closeHeroLayoutMenu();
+      }
+    });
+    var heroOptBtns = document.querySelectorAll("[data-hero-layout]");
+    for (var hi = 0; hi < heroOptBtns.length; hi++) {
+      (function (btn) {
+        btn.addEventListener("click", function () {
+          var v = btn.getAttribute("data-hero-layout");
+          setHeroLayoutValue(v);
+          closeHeroLayoutMenu();
+        });
+      })(heroOptBtns[hi]);
+    }
   }
   if (fImage) {
     fImage.addEventListener("input", function () {

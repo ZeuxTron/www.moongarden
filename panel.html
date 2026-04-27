@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="website.css?v=20260481" />
+    <link rel="stylesheet" href="website.css?v=20260486" />
     <style>
       .site-root {
         height: 100vh;
@@ -37,8 +37,6 @@
       }
       .admin-top-actions .admin-mode-switch {
         margin-bottom: 0;
-        flex: 1;
-        min-width: 0;
       }
       .admin-panel-close {
         flex-shrink: 0;
@@ -113,8 +111,7 @@
         color: var(--text-muted, #888);
       }
       .admin-field input,
-      .admin-field textarea,
-      .admin-field select {
+      .admin-field textarea {
         border-radius: 8px;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
         background: rgba(10, 8, 22, 0.55);
@@ -122,9 +119,20 @@
         padding: 8px 10px;
         font: inherit;
       }
-      .admin-field select {
-        cursor: pointer;
-        max-width: 100%;
+      .admin-news-page .admin-hero-layout-picker.cabinet-model-picker {
+        width: 100%;
+        position: relative;
+      }
+      .admin-news-page .admin-hero-layout-picker .cabinet-model-picker__trigger {
+        width: 100%;
+        min-width: 0;
+      }
+      .admin-news-page .admin-hero-layout-picker .cabinet-model-picker__trigger span:first-child {
+        min-width: 0;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .admin-field textarea {
         min-height: 120px;
@@ -235,7 +243,9 @@
       .admin-media-tile {
         flex: 0 0 auto;
         scroll-snap-align: start;
-        width: 140px;
+        width: 152px;
+        max-width: 100%;
+        box-sizing: border-box;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
         border-radius: 10px;
         padding: 8px;
@@ -243,6 +253,7 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
+        overflow: hidden;
       }
       .admin-media-tile.is-selected {
         border-color: rgba(147, 197, 253, 0.65);
@@ -267,16 +278,20 @@
       .admin-media-tile-actions {
         margin-top: auto;
         padding-top: 8px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 6px;
         width: 100%;
+        min-width: 0;
       }
       .admin-media-tile-actions .btn {
         width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
         justify-content: center;
-        padding: 6px 6px;
-        font-size: 12px;
+        padding: 6px 8px;
+        font-size: 11px;
+        line-height: 1.2;
       }
       .admin-news-preview {
         border-radius: 10px;
@@ -457,14 +472,32 @@
                   <span>Дата публикации</span>
                   <input id="f-date" name="publishedAt" type="datetime-local" />
                 </label>
-                <label class="admin-field" for="f-hero-layout">
+                <div class="admin-field">
                   <span>Расположение картинки в тексте (как на сайте)</span>
-                  <select id="f-hero-layout" name="heroLayout">
-                    <option value="tl">Слева сверху у текста</option>
-                    <option value="lc">Слева, ниже (по центру колонки)</option>
-                    <option value="br">Справа снизу</option>
-                  </select>
-                </label>
+                  <div class="cabinet-model-picker admin-hero-layout-picker">
+                    <input type="hidden" id="f-hero-layout" name="heroLayout" value="tl" />
+                    <button
+                      type="button"
+                      class="cabinet-model-picker__trigger"
+                      id="f-hero-layout-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-controls="f-hero-layout-menu"
+                    >
+                      <span id="f-hero-layout-label">Слева сверху у текста</span>
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    <div class="cabinet-model-picker__menu" id="f-hero-layout-menu" role="listbox">
+                      <button type="button" role="option" data-hero-layout="tl" class="is-selected">
+                        Слева сверху у текста
+                      </button>
+                      <button type="button" role="option" data-hero-layout="lc">
+                        Слева, ниже (по центру колонки)
+                      </button>
+                      <button type="button" role="option" data-hero-layout="br">Справа снизу</button>
+                    </div>
+                  </div>
+                </div>
                 <label class="admin-field" for="f-image">
                   <span>Картинка (справа в медиа нажмите «Выбрать» на миниатюре или вставьте URL)</span>
                   <input id="f-image-id" name="imageId" type="hidden" />
@@ -639,6 +672,6 @@
       </div>
     </div>
     <script src="api-config.js?v=1"></script>
-    <script src="admin-news.js?v=20260485"></script>
+    <script src="admin-news.js?v=20260486"></script>
   </body>
 </html>

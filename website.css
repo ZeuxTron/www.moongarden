@@ -248,7 +248,8 @@ img {
   gap: 10px;
   justify-self: end;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .site-header__auth {
