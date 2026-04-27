@@ -12,12 +12,21 @@
     />
     <link rel="stylesheet" href="website.css?v=20260472" />
     <style>
+      html,
+      body {
+        height: auto !important;
+        min-height: 100%;
+        overflow: auto !important;
+      }
+      .site-root {
+        min-height: 100vh;
+        overflow: visible !important;
+      }
       .admin-news-page {
         max-width: 920px;
         margin: 0 auto;
         padding: 32px 20px 80px;
-        min-height: 100vh;
-        overflow: auto;
+        min-height: 100%;
       }
       .admin-news-page h1 {
         font-family: var(--font-display, "Sora", sans-serif);
@@ -229,7 +238,7 @@
         </div>
       </div>
     </div>
-    <script src="api-config.js?v=1"></script>
-    <script src="admin-news.js?v=1"></script>
+    <script src="api-config.js?v=2"></script>
+    <script src="admin-news.js?v=2"></script>
   </body>
 </html>
