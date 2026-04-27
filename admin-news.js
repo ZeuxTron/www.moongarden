@@ -19,10 +19,10 @@
   var fExcerpt = document.getElementById("f-excerpt");
   var fBody = document.getElementById("f-body");
   var fDate = document.getElementById("f-date");
+  var fHeroLayout = document.getElementById("f-hero-layout");
   var fImage = document.getElementById("f-image");
   var fImageId = document.getElementById("f-image-id");
   var fImagePreview = document.getElementById("f-image-preview");
-  var newsPickImageBtn = document.getElementById("news-pick-image");
   var formMsg = document.getElementById("form-msg");
   var listEl = document.getElementById("news-list");
   var listMsg = document.getElementById("list-msg");
@@ -35,7 +35,6 @@
   var shotUrl = document.getElementById("shot-url");
   var shotImageId = document.getElementById("shot-image-id");
   var shotImagePreview = document.getElementById("shot-image-preview");
-  var shotPickImageBtn = document.getElementById("shot-pick-image");
   var shotOrder = document.getElementById("shot-order");
   var shotVisible = document.getElementById("shot-visible");
   var shotFormMsg = document.getElementById("shot-form-msg");
@@ -81,7 +80,6 @@
   if (!form || !app || !denied || !shotForm || !serverForm) return;
 
   var mediaItems = [];
-  var mediaTarget = "";
   var newsCache = [];
   var previewIndex = 0;
   var bodyPreviewTimer = null;
@@ -194,6 +192,16 @@
     return paras[0] || "";
   }
 
+  function newsHeroClassFromKey(key) {
+    var k = String(key || "").toLowerCase();
+    if (k !== "tl" && k !== "lc" && k !== "br") k = "tl";
+    return "site-news__hero site-news__hero--" + k;
+  }
+
+  function newsHeroClassFromForm() {
+    return newsHeroClassFromKey(fHeroLayout && fHeroLayout.value);
+  }
+
   function renderNewsPreview() {
     if (!previewBody || !previewTitle || !previewExcerpt || !previewText || !previewCounter) return;
     clampPreviewIndex();
@@ -211,10 +219,12 @@
       var imgSrc = (fImagePreview && !fImagePreview.hidden && fImagePreview.src) || fImage.value.trim();
       if (imgSrc && previewImg) {
         previewImg.src = imgSrc;
+        previewImg.className = newsHeroClassFromForm();
         previewImg.hidden = false;
       } else if (previewImg) {
         previewImg.hidden = true;
         previewImg.removeAttribute("src");
+        previewImg.className = newsHeroClassFromForm();
       }
       return;
     }
@@ -231,10 +241,12 @@
     var url = String(item.imageUrl || "").trim();
     if (url && previewImg) {
       previewImg.src = url;
+      previewImg.className = newsHeroClassFromKey(item.heroLayout);
       previewImg.hidden = false;
     } else if (previewImg) {
       previewImg.hidden = true;
       previewImg.removeAttribute("src");
+      previewImg.className = newsHeroClassFromKey(item.heroLayout);
     }
   }
 
@@ -267,6 +279,7 @@
     fExcerpt.value = "";
     fBody.value = "";
     fDate.value = "";
+    if (fHeroLayout) fHeroLayout.value = "tl";
     fImageId.value = "";
     fImage.value = "";
     if (fImagePreview) {
@@ -321,6 +334,26 @@
     setServerFormMsg("");
   }
 
+  async function reorderNewsByIndex(fromIdx, toIdx) {
+    if (!newsCache.length || fromIdx === toIdx) return;
+    if (toIdx < 0 || toIdx >= newsCache.length) return;
+    var slugs = newsCache.map(function (x) {
+      return x.slug;
+    });
+    var t = slugs[fromIdx];
+    slugs[fromIdx] = slugs[toIdx];
+    slugs[toIdx] = t;
+    listMsg.textContent = "";
+    listMsg.style.color = "";
+    try {
+      await apiJson("POST", "/admin/news/reorder", { slugs: slugs });
+      await loadList();
+    } catch (e) {
+      listMsg.textContent = e.message || String(e);
+      listMsg.style.color = "#f87171";
+    }
+  }
+
   function localIsoForInput(d) {
     var pad = function (n) {
       return String(n).padStart(2, "0");
@@ -352,7 +385,7 @@
         renderNewsPreview();
         return;
       }
-      items.forEach(function (item) {
+      items.forEach(function (item, index) {
         var li = document.createElement("li");
         var left = document.createElement("div");
         left.innerHTML =
@@ -367,6 +400,25 @@
         actions.style.display = "flex";
         actions.style.gap = "8px";
         actions.style.flexWrap = "wrap";
+        actions.style.alignItems = "center";
+        var bUp = document.createElement("button");
+        bUp.type = "button";
+        bUp.className = "btn btn--ghost btn--sm";
+        bUp.textContent = "↑";
+        bUp.title = "Выше в списке";
+        bUp.disabled = index === 0;
+        bUp.addEventListener("click", function () {
+          void reorderNewsByIndex(index, index - 1);
+        });
+        var bDown = document.createElement("button");
+        bDown.type = "button";
+        bDown.className = "btn btn--ghost btn--sm";
+        bDown.textContent = "↓";
+        bDown.title = "Ниже в списке";
+        bDown.disabled = index === items.length - 1;
+        bDown.addEventListener("click", function () {
+          void reorderNewsByIndex(index, index + 1);
+        });
         var bEdit = document.createElement("button");
         bEdit.type = "button";
         bEdit.className = "btn btn--ghost";
@@ -381,6 +433,8 @@
         bDel.addEventListener("click", function () {
           void deleteItem(item.slug);
         });
+        actions.appendChild(bUp);
+        actions.appendChild(bDown);
         actions.appendChild(bEdit);
         actions.appendChild(bDel);
         li.appendChild(left);
@@ -529,6 +583,10 @@
     } catch (e) {}
     fImage.value = "";
     fImageId.value = item.imageId || "";
+    if (fHeroLayout) {
+      var hl = String(item.heroLayout || "").toLowerCase();
+      fHeroLayout.value = hl === "lc" || hl === "br" ? hl : "tl";
+    }
     setPreview(fImagePreview, item.imageUrl || "");
     formTitle.textContent = "Редактирование: " + item.slug;
     setFormMsg("");
@@ -558,46 +616,28 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function focusMediaSection() {
-    if (!mediaRoot) return;
-    var heading = mediaRoot.querySelector(".admin-panel__section h3");
-    var scrollEl = heading || mediaRoot;
-    if (scrollEl.scrollIntoView) {
-      scrollEl.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-    }
-    mediaRoot.classList.remove("admin-media-root--pulse");
-    void mediaRoot.offsetWidth;
-    mediaRoot.classList.add("admin-media-root--pulse");
-    if (mediaRoot._mgPulseTimer) clearTimeout(mediaRoot._mgPulseTimer);
-    mediaRoot._mgPulseTimer = setTimeout(function () {
-      mediaRoot.classList.remove("admin-media-root--pulse");
-      mediaRoot._mgPulseTimer = null;
-    }, 1400);
-  }
-
-  function setMediaTarget(target) {
-    mediaTarget = target;
-    mediaMsg.textContent = "";
-    void loadMediaList().catch(function (e) {
-      mediaMsg.textContent = e.message || String(e);
-      mediaMsg.style.color = "#f87171";
-    });
-    focusMediaSection();
+  function currentMediaTargetFromUi() {
+    if (newsModePanel && !newsModePanel.hidden) return "news";
+    if (shotModePanel && !shotModePanel.hidden) return "shot";
+    return "";
   }
 
   function getSelectedMediaIdForTarget() {
-    if (mediaTarget === "news") return fImageId.value || "";
-    if (mediaTarget === "shot") return shotImageId.value || "";
+    var t = currentMediaTargetFromUi();
+    if (t === "news") return fImageId.value || "";
+    if (t === "shot") return shotImageId.value || "";
     return "";
   }
 
   function applySelectedMedia(item) {
     if (!item) return;
-    if (mediaTarget === "news") {
+    var t = currentMediaTargetFromUi();
+    if (t !== "news" && t !== "shot") return;
+    if (t === "news") {
       fImageId.value = item.fileId || item.id || "";
       fImage.value = item.url || "";
       setPreview(fImagePreview, item.url || "");
-    } else if (mediaTarget === "shot") {
+    } else {
       shotImageId.value = item.fileId || item.id || "";
       shotUrl.value = item.url || "";
       setPreview(shotImagePreview, item.url || "");
@@ -630,7 +670,8 @@
     if (!mediaList) return;
     mediaList.innerHTML = "";
     if (!mediaItems.length) {
-      mediaList.innerHTML = "<p class='admin-msg'>Библиотека пуста. Загрузите первое изображение.</p>";
+      mediaList.innerHTML =
+        "<p class=\"admin-msg admin-media-picker__empty\">Библиотека пуста. Загрузите первое изображение.</p>";
       return;
     }
     var selectedId = getSelectedMediaIdForTarget();
@@ -736,7 +777,11 @@
       btn.classList.toggle("is-active", active);
     });
     if (isNews || isScreenshots) {
-      void loadMediaList().catch(function () {});
+      void loadMediaList().catch(function () {
+        renderMediaTiles();
+      });
+    } else {
+      renderMediaTiles();
     }
   }
 
@@ -770,6 +815,7 @@
       body: fBody.value.trim(),
       imageId: (fImageId.value || "").trim(),
       imageUrl: (fImage.value || "").trim(),
+      heroLayout: (fHeroLayout && fHeroLayout.value) || "tl",
     };
     if (fDate.value) {
       var iso = new Date(fDate.value).toISOString();
@@ -834,17 +880,6 @@
     }
   });
 
-  if (newsPickImageBtn) {
-    newsPickImageBtn.addEventListener("click", function () {
-      setMediaTarget("news");
-    });
-  }
-  if (shotPickImageBtn) {
-    shotPickImageBtn.addEventListener("click", function () {
-      setMediaTarget("shot");
-    });
-  }
-
   ["input", "change"].forEach(function (ev) {
     if (fTitle) fTitle.addEventListener(ev, function () {
       if (previewIndex === 0) renderNewsPreview();
@@ -855,6 +890,11 @@
   });
   if (fBody) {
     fBody.addEventListener("input", scheduleBodyPreview);
+  }
+  if (fHeroLayout) {
+    fHeroLayout.addEventListener("change", function () {
+      if (previewIndex === 0) renderNewsPreview();
+    });
   }
   if (fImage) {
     fImage.addEventListener("input", function () {
