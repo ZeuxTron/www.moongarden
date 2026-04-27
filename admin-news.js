@@ -8,6 +8,7 @@
   var modeBtns = Array.prototype.slice.call(document.querySelectorAll("[data-admin-mode-btn]"));
   var newsModePanel = document.getElementById("admin-mode-news");
   var shotModePanel = document.getElementById("admin-mode-screenshots");
+  var serverModePanel = document.getElementById("admin-mode-servers");
 
   var form = document.getElementById("news-form");
   var formTitle = document.getElementById("form-title");
@@ -35,7 +36,23 @@
   var shotListMsg = document.getElementById("shot-list-msg");
   var shotResetBtn = document.getElementById("shot-reset");
 
-  if (!form || !app || !denied || !shotForm) return;
+  var serverForm = document.getElementById("server-form");
+  var serverFormTitle = document.getElementById("server-form-title");
+  var serverEditId = document.getElementById("server-edit-id");
+  var serverImage = document.getElementById("server-image");
+  var serverTitle = document.getElementById("server-title");
+  var serverTagline = document.getElementById("server-tagline");
+  var serverMeta1 = document.getElementById("server-meta1");
+  var serverMeta2 = document.getElementById("server-meta2");
+  var serverMeta3 = document.getElementById("server-meta3");
+  var serverOrder = document.getElementById("server-order");
+  var serverVisible = document.getElementById("server-visible");
+  var serverFormMsg = document.getElementById("server-form-msg");
+  var serverList = document.getElementById("server-list");
+  var serverListMsg = document.getElementById("server-list-msg");
+  var serverResetBtn = document.getElementById("server-reset");
+
+  if (!form || !app || !denied || !shotForm || !serverForm) return;
 
   function token() {
     try {
@@ -79,6 +96,10 @@
     shotFormMsg.textContent = text || "";
     shotFormMsg.style.color = isErr ? "#f87171" : "";
   }
+  function setServerFormMsg(text, isErr) {
+    serverFormMsg.textContent = text || "";
+    serverFormMsg.style.color = isErr ? "#f87171" : "";
+  }
 
   function resetForm() {
     editSlug.value = "";
@@ -99,6 +120,19 @@
     shotVisible.checked = true;
     shotFormTitle.textContent = "Новый скриншот";
     setShotFormMsg("");
+  }
+  function resetServerForm() {
+    serverEditId.value = "";
+    serverImage.value = "";
+    serverTitle.value = "";
+    serverTagline.value = "";
+    serverMeta1.value = "";
+    serverMeta2.value = "";
+    serverMeta3.value = "";
+    serverOrder.value = "0";
+    serverVisible.checked = true;
+    serverFormTitle.textContent = "Новая карточка сервера";
+    setServerFormMsg("");
   }
 
   function localIsoForInput(d) {
@@ -221,6 +255,57 @@
       shotListMsg.style.color = "#f87171";
     }
   }
+  async function loadServerList() {
+    serverListMsg.textContent = "";
+    serverList.innerHTML = "";
+    try {
+      var items = await apiJson("GET", "/admin/servers");
+      if (!Array.isArray(items) || !items.length) {
+        serverList.innerHTML = "<li>Нет карточек серверов</li>";
+        return;
+      }
+      items.forEach(function (item) {
+        var li = document.createElement("li");
+        var left = document.createElement("div");
+        left.innerHTML =
+          "<strong>" +
+          escapeHtml(item.title || "") +
+          '</strong><div class="meta">' +
+          escapeHtml(item.tagline || "") +
+          '</div><div class="meta">order=' +
+          escapeHtml(String(item.order || 0)) +
+          " · " +
+          escapeHtml(item.isVisible ? "виден" : "скрыт") +
+          "</div>";
+        var actions = document.createElement("div");
+        actions.style.display = "flex";
+        actions.style.gap = "8px";
+        actions.style.flexWrap = "wrap";
+        var bEdit = document.createElement("button");
+        bEdit.type = "button";
+        bEdit.className = "btn btn--ghost";
+        bEdit.textContent = "Правка";
+        bEdit.addEventListener("click", function () {
+          startServerEdit(item);
+        });
+        var bDel = document.createElement("button");
+        bDel.type = "button";
+        bDel.className = "btn btn--ghost";
+        bDel.textContent = "Удалить";
+        bDel.addEventListener("click", function () {
+          void deleteServer(item.id);
+        });
+        actions.appendChild(bEdit);
+        actions.appendChild(bDel);
+        li.appendChild(left);
+        li.appendChild(actions);
+        serverList.appendChild(li);
+      });
+    } catch (e) {
+      serverListMsg.textContent = e.message || String(e);
+      serverListMsg.style.color = "#f87171";
+    }
+  }
 
   function escapeHtml(s) {
     return String(s)
@@ -256,6 +341,20 @@
     setShotFormMsg("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+  function startServerEdit(item) {
+    serverEditId.value = item.id;
+    serverImage.value = item.imageUrl || "";
+    serverTitle.value = item.title || "";
+    serverTagline.value = item.tagline || "";
+    serverMeta1.value = item.meta1 || "";
+    serverMeta2.value = item.meta2 || "";
+    serverMeta3.value = item.meta3 || "";
+    serverOrder.value = String(item.order || 0);
+    serverVisible.checked = item.isVisible !== false;
+    serverFormTitle.textContent = "Редактирование карточки сервера";
+    setServerFormMsg("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function deleteItem(slug) {
     if (!confirm("Удалить новость «" + slug + "»?")) return;
@@ -278,13 +377,26 @@
       alert(e.message || String(e));
     }
   }
+  async function deleteServer(id) {
+    if (!confirm("Удалить карточку сервера?")) return;
+    try {
+      await apiJson("DELETE", "/admin/servers/" + encodeURIComponent(id));
+      await loadServerList();
+      if (serverEditId.value === id) resetServerForm();
+    } catch (e) {
+      alert(e.message || String(e));
+    }
+  }
 
   function switchMode(mode) {
-    var isNews = mode !== "screenshots";
+    var isNews = mode === "news";
+    var isScreenshots = mode === "screenshots";
+    var isServers = mode === "servers";
     if (newsModePanel) newsModePanel.hidden = !isNews;
-    if (shotModePanel) shotModePanel.hidden = isNews;
+    if (shotModePanel) shotModePanel.hidden = !isScreenshots;
+    if (serverModePanel) serverModePanel.hidden = !isServers;
     modeBtns.forEach(function (btn) {
-      var active = btn.getAttribute("data-admin-mode-btn") === (isNews ? "news" : "screenshots");
+      var active = btn.getAttribute("data-admin-mode-btn") === mode;
       btn.classList.toggle("is-active", active);
     });
   }
@@ -348,6 +460,9 @@
   shotResetBtn.addEventListener("click", function () {
     resetShotForm();
   });
+  serverResetBtn.addEventListener("click", function () {
+    resetServerForm();
+  });
 
   shotForm.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -372,6 +487,39 @@
       setShotFormMsg(err.message || String(err), true);
     }
   });
+  serverForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    setServerFormMsg("");
+    var payload = {
+      imageUrl: serverImage.value.trim(),
+      title: serverTitle.value.trim(),
+      tagline: serverTagline.value
+        .split(/[•,]/)
+        .map(function (x) {
+          return x.trim();
+        })
+        .filter(Boolean)
+        .join(" • "),
+      meta1: serverMeta1.value.trim(),
+      meta2: serverMeta2.value.trim(),
+      meta3: serverMeta3.value.trim(),
+      order: Number(serverOrder.value || 0),
+      isVisible: !!serverVisible.checked,
+    };
+    var isEdit = Boolean(serverEditId.value);
+    var method = isEdit ? "PUT" : "POST";
+    var path = isEdit
+      ? "/admin/servers/" + encodeURIComponent(serverEditId.value)
+      : "/admin/servers";
+    try {
+      await apiJson(method, path, payload);
+      setServerFormMsg("Сохранено.");
+      resetServerForm();
+      await loadServerList();
+    } catch (err) {
+      setServerFormMsg(err.message || String(err), true);
+    }
+  });
 
   (async function init() {
     var ok = await checkAdmin();
@@ -385,5 +533,6 @@
     switchMode("news");
     await loadList();
     await loadShotList();
+    await loadServerList();
   })();
 })();

@@ -844,8 +844,11 @@
   });
 
   if (changeNickBtn) {
+    changeNickBtn.hidden = true;
+    changeNickBtn.disabled = true;
+    changeNickBtn.setAttribute("aria-disabled", "true");
     changeNickBtn.addEventListener("click", function () {
-      openCabinetMiniModal("nick");
+      return;
     });
   }
 

@@ -7,6 +7,10 @@
   if (!section || !root) return;
 
   var HERO_VARIANTS = ["site-news__hero--tl", "site-news__hero--lc", "site-news__hero--br"];
+  var COLD_WAIT_MS = 20000;
+  var FETCH_TIMEOUT_MS = 8000;
+  var RETRY_DELAY_MS = 2500;
+  var MAX_RETRIES = 8;
 
   function escapeHtml(s) {
     return String(s)
@@ -49,6 +53,62 @@
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
       '<polyline points="9 18 15 12 9 6" /></svg>'
     );
+  }
+
+  function wait(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function withTimeout(ms, taskFactory) {
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true;
+        reject(new Error("timeout"));
+      }, ms);
+      Promise.resolve()
+        .then(taskFactory)
+        .then(function (value) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(value);
+        })
+        .catch(function (err) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
+  }
+
+  function renderWakeupStatus(elapsedSec) {
+    root.innerHTML =
+      '<div class="news-coldstart-box">' +
+      '<p class="news-fetch-status news-fetch-status--wakeup">Сервер просыпается, подождите немного…</p>' +
+      '<p class="news-fetch-substatus">Обычно это занимает до минуты на бесплатном хостинге. Прошло: ' +
+      escapeHtml(String(elapsedSec)) +
+      " сек.</p>" +
+      "</div>";
+  }
+
+  function renderFallbackRetry(message) {
+    root.innerHTML =
+      '<div class="news-coldstart-box">' +
+      '<p class="news-fetch-status">' +
+      escapeHtml(message) +
+      '</p><button type="button" class="btn btn--ghost news-fetch-retry-btn" data-news-retry>Повторить</button>' +
+      "</div>";
+    var retryBtn = root.querySelector("[data-news-retry]");
+    if (retryBtn) {
+      retryBtn.addEventListener("click", function () {
+        void load();
+      });
+    }
   }
 
   function buildArticleHtml(item, index) {
@@ -116,9 +176,30 @@
 
   async function load() {
     try {
-      var r = await fetch(API_BASE.replace(/\/$/, "") + "/news?limit=50");
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      var items = await r.json();
+      var startedAt = Date.now();
+      var retries = 0;
+      var items = null;
+      while (retries < MAX_RETRIES) {
+        var elapsedMs = Date.now() - startedAt;
+        if (elapsedMs >= COLD_WAIT_MS) {
+          renderWakeupStatus(Math.max(1, Math.round(elapsedMs / 1000)));
+        } else if (statusEl) {
+          statusEl.textContent = "Загрузка новостей…";
+        }
+
+        try {
+          var r = await withTimeout(FETCH_TIMEOUT_MS, function () {
+            return fetch(API_BASE.replace(/\/$/, "") + "/news?limit=50");
+          });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          items = await r.json();
+          break;
+        } catch (e) {
+          retries += 1;
+          if (retries >= MAX_RETRIES) throw e;
+          await wait(RETRY_DELAY_MS);
+        }
+      }
       if (!Array.isArray(items) || !items.length) {
         root.innerHTML =
           '<p class="news-fetch-status">Новостей пока нет. Загляните позже.</p>';
@@ -151,14 +232,9 @@
         window.initNewsSlider(section);
       }
     } catch (err) {
-      var stub =
-        "Новости сейчас недоступны. Загляните позже — мы обязательно что-нибудь расскажем.";
-      if (statusEl) {
-        statusEl.textContent = stub;
-      } else {
-        root.innerHTML =
-          '<p class="news-fetch-status">' + escapeHtml(stub) + "</p>";
-      }
+      renderFallbackRetry(
+        "Новости сейчас недоступны. Сервер может ещё запускаться, попробуйте повторить."
+      );
     }
   }
 

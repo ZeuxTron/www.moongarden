@@ -132,7 +132,7 @@
   <body>
     <div class="site-root">
       <div class="admin-news-page">
-        <h1>Новости</h1>
+        <h1>Панель контента</h1>
         <p class="admin-hint">
           Войдите на основном сайте в аккаунт с правами администратора (<code>ADMIN_USERNAMES</code> или
           <code>isAdmin</code> в Mongo).
@@ -146,6 +146,7 @@
             <div class="admin-mode-switch" role="tablist" aria-label="Режим админки">
               <button type="button" class="btn btn--ghost is-active" data-admin-mode-btn="news">Новости</button>
               <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
+              <button type="button" class="btn btn--ghost" data-admin-mode-btn="servers">Серверы</button>
             </div>
           </div>
 
@@ -224,6 +225,57 @@
               <h2>Скриншоты в галерее</h2>
               <ul class="admin-list" id="shot-list"></ul>
               <p class="admin-msg" id="shot-list-msg" role="status"></p>
+            </div>
+          </div>
+
+          <div id="admin-mode-servers" class="admin-mode-panel admin-news-grid" hidden>
+            <div class="admin-panel">
+              <h2 id="server-form-title">Новая карточка сервера</h2>
+              <form id="server-form">
+                <input type="hidden" id="server-edit-id" value="" />
+                <label class="admin-field" for="server-image">
+                  <span>Картинка (`product-mark product-mark--server`)</span>
+                  <input id="server-image" name="imageUrl" type="url" required placeholder="https://..." />
+                </label>
+                <label class="admin-field" for="server-title">
+                  <span>Название (h1 в `server-card-title-row`)</span>
+                  <input id="server-title" name="title" type="text" required />
+                </label>
+                <label class="admin-field" for="server-tagline">
+                  <span>Теги (`server-tagline`) — вводите через запятую или «•»</span>
+                  <input id="server-tagline" name="tagline" type="text" required placeholder="Magic, Tech, Exploration" />
+                </label>
+                <label class="admin-field" for="server-meta1">
+                  <span>Метаданные 1 (dd: Версия)</span>
+                  <input id="server-meta1" name="meta1" type="text" required />
+                </label>
+                <label class="admin-field" for="server-meta2">
+                  <span>Метаданные 2 (dd: Сборка)</span>
+                  <input id="server-meta2" name="meta2" type="text" required />
+                </label>
+                <label class="admin-field" for="server-meta3">
+                  <span>Метаданные 3 (dd: Последний запуск)</span>
+                  <input id="server-meta3" name="meta3" type="text" required />
+                </label>
+                <label class="admin-field" for="server-order">
+                  <span>Порядок (меньше = выше)</span>
+                  <input id="server-order" name="order" type="number" value="0" />
+                </label>
+                <label class="admin-field" for="server-visible">
+                  <span>Видимость</span>
+                  <input id="server-visible" name="isVisible" type="checkbox" checked />
+                </label>
+                <div class="admin-actions">
+                  <button type="submit" class="btn btn--primary">Сохранить</button>
+                  <button type="button" class="btn btn--ghost" id="server-reset">Сбросить форму</button>
+                </div>
+                <p class="admin-msg" id="server-form-msg" role="status"></p>
+              </form>
+            </div>
+            <div class="admin-panel">
+              <h2>Карточки серверов</h2>
+              <ul class="admin-list" id="server-list"></ul>
+              <p class="admin-msg" id="server-list-msg" role="status"></p>
             </div>
           </div>
         </div>
