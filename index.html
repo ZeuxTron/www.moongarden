@@ -42,13 +42,14 @@
               <div class="site-header__auth">
                 <button
                   type="button"
-                  class="btn btn--ghost"
+                  class="btn btn--ghost is-auth-loading"
                   id="header-auth-btn"
                   data-auth-open="login"
                   aria-haspopup="dialog"
                   aria-controls="account-modal"
+                  aria-busy="true"
                 >
-                  Войти
+                  Загрузка...
                 </button>
               </div>
               <a class="btn btn--primary" data-mg-launcher-download href="downloads/MoonGarden-Launcher-Setup.exe">Скачать лаунчер</a>
@@ -369,7 +370,17 @@
         <div class="account-panel account-panel--cabinet" id="account-cabinet" hidden>
           <div class="cabinet-layout">
             <aside class="cabinet-aside">
-              <div class="cabinet-server-tag" aria-hidden="true">MoonGarden</div>
+              <div class="cabinet-server-tag-wrap">
+                <div class="cabinet-server-tag" aria-hidden="true">MoonGarden</div>
+                <a
+                  class="cabinet-admin-tag"
+                  id="cabinet-admin-tag"
+                  href="admin-news.html"
+                  hidden
+                >
+                  admin
+                </a>
+              </div>
               <div class="skin-preview skin-preview--mc" id="skin-preview">
                 <div class="skin-preview__checker" aria-hidden="true"></div>
                 <div class="skin-preview__figure-wrap skin-preview__figure-wrap--3d">
