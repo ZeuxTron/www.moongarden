@@ -230,6 +230,7 @@
     var nick = getSession();
     headerAuthBtn.classList.remove("is-auth-loading");
     headerAuthBtn.setAttribute("aria-busy", "false");
+    headerAuthBtn.disabled = false;
     if (nick) {
       headerAuthBtn.textContent = "Личный кабинет";
       headerAuthBtn.setAttribute("data-auth-open", "cabinet");
@@ -369,7 +370,10 @@
     msgRegister.textContent = "";
     if (cabinetModelMenu) cabinetModelMenu.classList.remove("is-open");
     if (cabinetModelTrigger) cabinetModelTrigger.setAttribute("aria-expanded", "false");
-    if (cabinetAdminTag) cabinetAdminTag.hidden = true;
+    if (cabinetAdminTag) {
+      cabinetAdminTag.hidden = true;
+      cabinetAdminTag.style.display = "none";
+    }
 
     window.requestAnimationFrame(function () {
       try {
@@ -408,7 +412,14 @@
     modalTitle.classList.remove("visually-hidden");
     cabinetNick.textContent = lastMe.username;
     if (cabinetAdminTag) {
-      cabinetAdminTag.hidden = !Boolean(lastMe.isAdmin);
+      var isAdmin = Boolean(lastMe.isAdmin);
+      cabinetAdminTag.hidden = !isAdmin;
+      if (isAdmin) {
+        cabinetAdminTag.removeAttribute("hidden");
+        cabinetAdminTag.style.display = "inline-block";
+      } else {
+        cabinetAdminTag.style.display = "none";
+      }
     }
 
     if (cabinetJoined) {
@@ -445,10 +456,21 @@
     document.body.classList.add("site-modal-open");
 
     if (mode === "cabinet" && getSession()) {
-      showCabinet();
+      guestPanel.hidden = true;
+      cabinetPanel.hidden = true;
+      if (authSegmentedHead) authSegmentedHead.hidden = true;
+      modalPanel.classList.remove("site-modal__panel--auth");
+      modalPanel.classList.add("site-modal__panel--cabinet", "site-modal__panel--loading");
+      modalTitle.textContent = "Личный кабинет";
+      modalTitle.classList.remove("visually-hidden");
+      showCabinet().finally(function () {
+        modalPanel.classList.remove("site-modal__panel--loading");
+      });
     } else if (mode === "register") {
+      modalPanel.classList.remove("site-modal__panel--loading");
       showGuestPanel("register");
     } else {
+      modalPanel.classList.remove("site-modal__panel--loading");
       showGuestPanel("login");
     }
 
@@ -547,6 +569,9 @@
 
   for (var o = 0; o < openBtns.length; o++) {
     openBtns[o].addEventListener("click", function () {
+      if (this === headerAuthBtn && (headerAuthBtn.disabled || headerAuthBtn.getAttribute("aria-busy") === "true")) {
+        return;
+      }
       openModal(this.getAttribute("data-auth-open"), this);
     });
   }

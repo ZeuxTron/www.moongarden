@@ -261,6 +261,7 @@ img {
 .site-header__auth .is-auth-loading {
   opacity: 0.85;
   cursor: default;
+  pointer-events: none;
 }
 
 .brand {
@@ -1007,6 +1008,25 @@ body.site-modal-open {
   outline: none;
 }
 
+.site-modal__panel.site-modal__panel--loading {
+  min-height: 280px;
+}
+
+.site-modal__panel.site-modal__panel--loading .account-panel {
+  display: none !important;
+}
+
+.site-modal__panel.site-modal__panel--loading::after {
+  content: "Загрузка профиля...";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+}
+
 .site-modal__panel--auth {
   width: min(420px, 100%);
 }
@@ -1225,6 +1245,8 @@ body.site-modal-open {
 
 .cabinet-admin-tag {
   display: inline-block;
+  position: absolute;
+  right: 0;
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 11px;
