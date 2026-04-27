@@ -538,6 +538,7 @@
     var ok = await checkAdmin();
     if (!ok) {
       denied.hidden = false;
+      app.hidden = true;
       return;
     }
     denied.hidden = true;

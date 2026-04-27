@@ -12,6 +12,10 @@
     />
     <link rel="stylesheet" href="website.css?v=20260472" />
     <style>
+      .site-root {
+        height: 100vh;
+        overflow-y: auto;
+      }
       .admin-news-page {
         max-width: 920px;
         margin: 0 auto;
@@ -25,8 +29,16 @@
       }
       .admin-top-actions {
         display: flex;
-        justify-content: flex-start;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
         margin-bottom: 14px;
+      }
+      .admin-top-actions .admin-mode-switch {
+        margin-bottom: 0;
+      }
+      .admin-top-actions .admin-back-link {
+        margin-left: auto;
       }
       .admin-news-page .admin-hint {
         color: var(--text-muted, #888);
@@ -119,7 +131,6 @@
       .admin-mode-switch {
         display: inline-flex;
         gap: 8px;
-        margin-bottom: 18px;
         padding: 4px;
         border-radius: 10px;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
@@ -132,13 +143,21 @@
       .admin-mode-panel[hidden] {
         display: none !important;
       }
+      #admin-app[hidden] {
+        display: none !important;
+      }
     </style>
   </head>
   <body>
     <div class="site-root">
       <div class="admin-news-page">
         <div class="admin-top-actions">
-          <a class="btn btn--ghost" href="index.html">Назад</a>
+          <div class="admin-mode-switch" role="tablist" aria-label="Режим админки">
+            <button type="button" class="btn btn--ghost is-active" data-admin-mode-btn="news">Новости</button>
+            <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
+            <button type="button" class="btn btn--ghost" data-admin-mode-btn="servers">Серверы</button>
+          </div>
+          <a class="btn btn--ghost admin-back-link" href="index.html">Назад</a>
         </div>
         <h1>Панель контента</h1>
         <p class="admin-hint">
@@ -150,14 +169,6 @@
           <p><a href="index.html">На главную</a></p>
         </div>
         <div id="admin-app" class="admin-news-grid" hidden>
-          <div style="grid-column: 1 / -1">
-            <div class="admin-mode-switch" role="tablist" aria-label="Режим админки">
-              <button type="button" class="btn btn--ghost is-active" data-admin-mode-btn="news">Новости</button>
-              <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
-              <button type="button" class="btn btn--ghost" data-admin-mode-btn="servers">Серверы</button>
-            </div>
-          </div>
-
           <div id="admin-mode-news" class="admin-mode-panel admin-news-grid">
             <div class="admin-panel">
               <h2 id="form-title">Новая новость</h2>

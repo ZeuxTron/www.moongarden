@@ -96,19 +96,16 @@
       "</div>";
   }
 
-  function renderFallbackRetry(message) {
+  function renderFallbackText(message, substatus) {
     root.innerHTML =
       '<div class="news-coldstart-box">' +
       '<p class="news-fetch-status">' +
       escapeHtml(message) +
-      '</p><button type="button" class="btn btn--ghost news-fetch-retry-btn" data-news-retry>Повторить</button>' +
+      "</p>" +
+      '<p class="news-fetch-substatus">' +
+      escapeHtml(substatus || "") +
+      "</p>" +
       "</div>";
-    var retryBtn = root.querySelector("[data-news-retry]");
-    if (retryBtn) {
-      retryBtn.addEventListener("click", function () {
-        void load();
-      });
-    }
   }
 
   function buildArticleHtml(item, index) {
@@ -232,8 +229,9 @@
         window.initNewsSlider(section);
       }
     } catch (err) {
-      renderFallbackRetry(
-        "Новости сейчас недоступны. Сервер может ещё запускаться, попробуйте повторить."
+      renderFallbackText(
+        "Сервер просыпается, подождите немного…",
+        "Обычно это занимает до минуты на бесплатном хостинге. Обновите страницу чуть позже."
       );
     }
   }

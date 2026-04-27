@@ -245,6 +245,7 @@ window.initNewsSlider = function (newsSection) {
   var index = 0;
   var autoTimer = null;
   var intervalMs = 7000;
+  var disableAutoOnMobile = window.matchMedia("(max-width: 560px), (pointer: coarse)").matches;
   var hoverPaused = false;
   var isPointerDown = false;
   var pointerStartX = 0;
@@ -280,6 +281,7 @@ window.initNewsSlider = function (newsSection) {
   function scheduleAuto() {
     stopAuto();
     if (hoverPaused) return;
+    if (disableAutoOnMobile) return;
     autoTimer = setInterval(function () {
       go(index + 1);
     }, intervalMs);

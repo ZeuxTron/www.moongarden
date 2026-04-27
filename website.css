@@ -56,9 +56,8 @@ html {
 #gallery,
 #news,
 #start,
-#contacts,
-#about,
-#faq {
+#info,
+#about {
   scroll-margin-top: 88px;
 }
 
@@ -525,10 +524,6 @@ main {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.92rem;
-}
-
-.news-fetch-retry-btn {
-  margin-top: 2px;
 }
 
 .news-slider-viewport {
@@ -1039,7 +1034,7 @@ body.site-modal-open {
 }
 
 .site-modal__panel.site-modal__panel--loading::after {
-  content: "Загрузка профиля";
+  content: "Загрузка профиля.";
   position: absolute;
   inset: 0;
   display: grid;
@@ -1047,29 +1042,25 @@ body.site-modal-open {
   color: var(--text-muted);
   font-size: 14px;
   letter-spacing: 0.03em;
+  animation: mg-loading-text-dots 1.1s steps(1, end) infinite;
 }
 
-.site-modal__panel.site-modal__panel--loading::before {
-  content: "...";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(64px, -50%);
-  width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  color: var(--text-muted);
-  font-size: 14px;
-  letter-spacing: 0;
-  animation: mg-loading-dots 1.1s steps(4, end) infinite;
-}
-
-@keyframes mg-loading-dots {
-  from {
-    width: 0;
+@keyframes mg-loading-text-dots {
+  0%,
+  24% {
+    content: "Загрузка профиля.";
   }
-  to {
-    width: 3ch;
+  25%,
+  49% {
+    content: "Загрузка профиля..";
+  }
+  50%,
+  74% {
+    content: "Загрузка профиля...";
+  }
+  75%,
+  100% {
+    content: "Загрузка профиля";
   }
 }
 
@@ -1697,6 +1688,12 @@ body.site-modal-open {
 
 .skin-slot-actions .btn {
   min-width: 140px;
+}
+
+#skin-slot-remove:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
 }
 
 .cabinet-mini-modal {
