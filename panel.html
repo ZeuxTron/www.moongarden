@@ -10,14 +10,14 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="website.css?v=20260472" />
+    <link rel="stylesheet" href="website.css?v=20260481" />
     <style>
       .site-root {
         height: 100vh;
         overflow-y: auto;
       }
       .admin-news-page {
-        max-width: 920px;
+        max-width: 1240px;
         margin: 0 auto;
         padding: 32px 20px 80px;
         min-height: 100vh;
@@ -51,7 +51,7 @@
       }
       @media (min-width: 900px) {
         .admin-news-grid {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: minmax(0, 1.38fr) minmax(0, 0.92fr);
           align-items: start;
         }
       }
@@ -64,6 +64,18 @@
       .admin-panel h2 {
         margin: 0 0 16px;
         font-size: 16px;
+      }
+      .admin-panel__section {
+        margin-bottom: 22px;
+      }
+      .admin-panel__section:last-child {
+        margin-bottom: 0;
+      }
+      .admin-panel__section h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-muted, #aaa);
       }
       .admin-field {
         display: flex;
@@ -93,6 +105,17 @@
         flex-wrap: wrap;
         gap: 10px;
         margin-top: 16px;
+        align-items: center;
+      }
+      @media (max-width: 520px) {
+        .admin-actions .btn {
+          flex: 1 1 calc(50% - 5px);
+          min-width: 0;
+          justify-content: center;
+        }
+        .admin-actions .btn:only-child {
+          flex: 1 1 100%;
+        }
       }
       .admin-list {
         list-style: none;
@@ -101,7 +124,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        max-height: 520px;
+        max-height: 420px;
         overflow: auto;
       }
       .admin-list li {
@@ -159,10 +182,10 @@
       }
       .admin-media-picker {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 10px;
         margin-top: 14px;
-        max-height: 54vh;
+        max-height: 280px;
         overflow: auto;
       }
       .admin-media-tile {
@@ -177,14 +200,14 @@
       }
       .admin-media-tile img {
         width: 100%;
-        height: 110px;
+        height: 90px;
         object-fit: cover;
         border-radius: 8px;
         display: block;
       }
       .admin-media-tile-title {
         margin-top: 8px;
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-muted, #bbb);
         word-break: break-word;
       }
@@ -192,6 +215,70 @@
         margin-top: 8px;
         display: flex;
         gap: 6px;
+        flex-wrap: wrap;
+      }
+      .admin-news-preview {
+        border-radius: 10px;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+        background: rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+      }
+      .admin-news-preview__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+        flex-wrap: wrap;
+      }
+      .admin-news-preview__counter {
+        font-size: 13px;
+        color: var(--text-muted, #aaa);
+        font-variant-numeric: tabular-nums;
+      }
+      .admin-news-preview__nav {
+        display: flex;
+        gap: 8px;
+      }
+      .admin-news-preview__body {
+        padding: 12px;
+        max-height: 320px;
+        overflow: auto;
+      }
+      .admin-news-preview__body img {
+        width: 100%;
+        max-height: 140px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+      .admin-news-preview__body h4 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+      .admin-news-preview__body .lead {
+        font-size: 13px;
+        color: var(--text-muted, #bbb);
+        margin-bottom: 8px;
+      }
+      .admin-news-preview__body .body-snippet {
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--text, #ddd);
+        white-space: pre-wrap;
+      }
+      .admin-news-preview__badge {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(59, 130, 246, 0.25);
+        color: #93c5fd;
+        margin-bottom: 8px;
+      }
+      #admin-media-park {
+        display: none;
       }
     </style>
   </head>
@@ -207,10 +294,7 @@
           <a class="btn btn--ghost admin-back-link" href="index.html">Назад</a>
         </div>
         <h1>Панель контента</h1>
-        <p class="admin-hint">
-          Войдите на основном сайте в аккаунт с правами администратора (<code>ADMIN_USERNAMES</code> или
-          <code>isAdmin</code> в Mongo).
-        </p>
+        <p class="admin-hint" id="admin-hint"></p>
         <div id="admin-denied" class="admin-denied" hidden>
           <strong>Нет доступа.</strong> Нужна авторизация и флаг администратора.
           <p><a href="index.html">На главную</a></p>
@@ -258,9 +342,31 @@
               </form>
             </div>
             <div class="admin-panel">
-              <h2>Опубликованные</h2>
-              <ul class="admin-list" id="news-list"></ul>
-              <p class="admin-msg" id="list-msg" role="status"></p>
+              <div id="admin-media-host-news"></div>
+              <div class="admin-panel__section" id="admin-news-preview-section">
+                <h3>Предпросмотр</h3>
+                <div class="admin-news-preview">
+                  <div class="admin-news-preview__toolbar">
+                    <span class="admin-news-preview__counter" data-news-preview-counter>1 / 1</span>
+                    <div class="admin-news-preview__nav">
+                      <button type="button" class="btn btn--ghost btn--sm" data-news-preview-prev aria-label="Предыдущая">←</button>
+                      <button type="button" class="btn btn--ghost btn--sm" data-news-preview-next aria-label="Следующая">→</button>
+                    </div>
+                  </div>
+                  <div class="admin-news-preview__body" data-news-preview-body>
+                    <span class="admin-news-preview__badge">Черновик</span>
+                    <img data-news-preview-img hidden alt="" />
+                    <h4 data-news-preview-title></h4>
+                    <p class="lead" data-news-preview-excerpt></p>
+                    <div class="body-snippet" data-news-preview-text></div>
+                  </div>
+                </div>
+              </div>
+              <div class="admin-panel__section">
+                <h2>Опубликованные</h2>
+                <ul class="admin-list" id="news-list"></ul>
+                <p class="admin-msg" id="list-msg" role="status"></p>
+              </div>
             </div>
           </div>
 
@@ -286,9 +392,9 @@
                   <span>Порядок (меньше = выше)</span>
                   <input id="shot-order" name="order" type="number" value="0" />
                 </label>
-                <label class="admin-field" for="shot-visible">
-                  <span>Видимость</span>
+                <label class="mg-check admin-field--check" for="shot-visible">
                   <input id="shot-visible" name="isVisible" type="checkbox" checked />
+                  <span>Видимость</span>
                 </label>
                 <div class="admin-actions">
                   <button type="submit" class="btn btn--primary">Сохранить</button>
@@ -298,9 +404,12 @@
               </form>
             </div>
             <div class="admin-panel">
-              <h2>Скриншоты в галерее</h2>
-              <ul class="admin-list" id="shot-list"></ul>
-              <p class="admin-msg" id="shot-list-msg" role="status"></p>
+              <div id="admin-media-host-screenshots"></div>
+              <div class="admin-panel__section">
+                <h2>Скриншоты в галерее</h2>
+                <ul class="admin-list" id="shot-list"></ul>
+                <p class="admin-msg" id="shot-list-msg" role="status"></p>
+              </div>
             </div>
           </div>
 
@@ -309,10 +418,16 @@
               <h2 id="server-form-title">Новая карточка сервера</h2>
               <form id="server-form">
                 <input type="hidden" id="server-edit-id" value="" />
-                <label class="admin-field" for="server-image">
+                <div class="admin-field">
                   <span>Картинка (`product-mark product-mark--server`)</span>
-                  <input id="server-image" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
-                </label>
+                  <label class="mg-file">
+                    <input id="server-image" name="image" type="file" accept="image/png,image/jpeg,image/webp" class="mg-file__input" />
+                    <span class="mg-file__row">
+                      <span class="mg-file__btn btn btn--ghost">Выбрать файл</span>
+                      <span class="mg-file__name" data-file-name>Файл не выбран</span>
+                    </span>
+                  </label>
+                </div>
                 <label class="admin-field" for="server-title">
                   <span>Название (h1 в `server-card-title-row`)</span>
                   <input id="server-title" name="title" type="text" required />
@@ -337,9 +452,9 @@
                   <span>Порядок (меньше = выше)</span>
                   <input id="server-order" name="order" type="number" value="0" />
                 </label>
-                <label class="admin-field" for="server-visible">
-                  <span>Видимость</span>
+                <label class="mg-check admin-field--check" for="server-visible">
                   <input id="server-visible" name="isVisible" type="checkbox" checked />
+                  <span>Видимость</span>
                 </label>
                 <div class="admin-actions">
                   <button type="submit" class="btn btn--primary">Сохранить</button>
@@ -357,17 +472,24 @@
         </div>
       </div>
     </div>
-    <div class="site-modal" id="media-modal" hidden aria-hidden="true">
-      <div class="site-modal__backdrop" data-media-close></div>
-      <section class="site-modal__panel" role="dialog" aria-modal="true" aria-label="Галерея">
-        <header class="site-modal__header">
-          <h2>Галерея картинок</h2>
-          <button type="button" class="site-modal__close" data-media-close aria-label="Закрыть">✕</button>
-        </header>
-        <div class="site-modal__body">
+    <div id="admin-media-park">
+      <div id="admin-media-root">
+        <div class="admin-panel__section">
+          <h3>Медиа (Google Drive)</h3>
           <form id="media-upload-form" class="admin-field">
-            <span>Загрузить в Google Drive</span>
-            <input id="media-upload-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            <span>Загрузить изображение</span>
+            <label class="mg-file">
+              <input
+                id="media-upload-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                class="mg-file__input"
+              />
+              <span class="mg-file__row">
+                <span class="mg-file__btn btn btn--ghost">Выбрать файл</span>
+                <span class="mg-file__name" data-file-name>Файл не выбран</span>
+              </span>
+            </label>
             <div class="admin-actions" style="margin-top: 0">
               <button type="submit" class="btn btn--primary">Загрузить</button>
             </div>
@@ -375,9 +497,9 @@
           </form>
           <div id="media-picker-list" class="admin-media-picker"></div>
         </div>
-      </section>
+      </div>
     </div>
     <script src="api-config.js?v=1"></script>
-    <script src="admin-news.js?v=1"></script>
+    <script src="admin-news.js?v=20260481"></script>
   </body>
 </html>

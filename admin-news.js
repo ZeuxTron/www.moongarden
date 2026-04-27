@@ -5,6 +5,7 @@
 
   var denied = document.getElementById("admin-denied");
   var app = document.getElementById("admin-app");
+  var adminHint = document.getElementById("admin-hint");
   var modeBtns = Array.prototype.slice.call(document.querySelectorAll("[data-admin-mode-btn]"));
   var newsModePanel = document.getElementById("admin-mode-news");
   var shotModePanel = document.getElementById("admin-mode-screenshots");
@@ -58,16 +59,32 @@
   var serverListMsg = document.getElementById("server-list-msg");
   var serverResetBtn = document.getElementById("server-reset");
 
-  var mediaModal = document.getElementById("media-modal");
+  var mediaRoot = document.getElementById("admin-media-root");
+  var mediaPark = document.getElementById("admin-media-park");
+  var hostNews = document.getElementById("admin-media-host-news");
+  var hostScreenshots = document.getElementById("admin-media-host-screenshots");
   var mediaList = document.getElementById("media-picker-list");
   var mediaMsg = document.getElementById("media-msg");
   var mediaUploadForm = document.getElementById("media-upload-form");
   var mediaUploadInput = document.getElementById("media-upload-input");
-  var mediaCloseEls = Array.prototype.slice.call(document.querySelectorAll("[data-media-close]"));
+
+  var previewCounter = document.querySelector("[data-news-preview-counter]");
+  var previewPrev = document.querySelector("[data-news-preview-prev]");
+  var previewNext = document.querySelector("[data-news-preview-next]");
+  var previewBody = document.querySelector("[data-news-preview-body]");
+  var previewBadge = previewBody && previewBody.querySelector(".admin-news-preview__badge");
+  var previewImg = document.querySelector("[data-news-preview-img]");
+  var previewTitle = document.querySelector("[data-news-preview-title]");
+  var previewExcerpt = document.querySelector("[data-news-preview-excerpt]");
+  var previewText = document.querySelector("[data-news-preview-text]");
 
   if (!form || !app || !denied || !shotForm || !serverForm) return;
+
   var mediaItems = [];
   var mediaTarget = "";
+  var newsCache = [];
+  var previewIndex = 0;
+  var bodyPreviewTimer = null;
 
   function token() {
     try {
@@ -103,6 +120,133 @@
     return Boolean(data.isAdmin);
   }
 
+  async function setAdminHintFromMe() {
+    if (!adminHint) return;
+    try {
+      var r = await fetch(API_BASE.replace(/\/$/, "") + "/me", {
+        headers: { Authorization: "Bearer " + token() },
+      });
+      if (!r.ok) return;
+      var data = await r.json();
+      var u = data.username ? String(data.username) : "";
+      adminHint.textContent = u
+        ? "Вы вошли с аккаунта администратора: «" + u + "»"
+        : "Вы вошли как администратор.";
+    } catch (e) {}
+  }
+
+  function bindMgFileInput(input) {
+    if (!input) return;
+    var wrap = input.closest(".mg-file");
+    var nameEl = wrap && wrap.querySelector("[data-file-name]");
+    if (!nameEl) return;
+    function sync() {
+      var f = input.files && input.files[0];
+      nameEl.textContent = f ? f.name : "Файл не выбран";
+    }
+    input.addEventListener("change", sync);
+    sync();
+  }
+
+  function syncServerFileLabel() {
+    if (!serverImage) return;
+    var wrap = serverImage.closest(".mg-file");
+    var nameEl = wrap && wrap.querySelector("[data-file-name]");
+    if (nameEl) nameEl.textContent = "Файл не выбран";
+  }
+
+  function syncMediaFileLabel() {
+    if (!mediaUploadInput) return;
+    var wrap = mediaUploadInput.closest(".mg-file");
+    var nameEl = wrap && wrap.querySelector("[data-file-name]");
+    if (nameEl) nameEl.textContent = "Файл не выбран";
+  }
+
+  function placeMediaHost(mode) {
+    if (!mediaRoot || !mediaPark) return;
+    if (mode === "news" && hostNews) {
+      hostNews.appendChild(mediaRoot);
+    } else if (mode === "screenshots" && hostScreenshots) {
+      hostScreenshots.appendChild(mediaRoot);
+    } else {
+      mediaPark.appendChild(mediaRoot);
+    }
+  }
+
+  function previewSlideCount() {
+    return 1 + newsCache.length;
+  }
+
+  function clampPreviewIndex() {
+    var n = previewSlideCount();
+    if (n < 1) n = 1;
+    if (previewIndex >= n) previewIndex = n - 1;
+    if (previewIndex < 0) previewIndex = 0;
+  }
+
+  function firstBodyParagraph(text) {
+    var paras = String(text || "")
+      .split(/\n\s*\n/)
+      .map(function (x) {
+        return x.trim();
+      })
+      .filter(Boolean);
+    return paras[0] || "";
+  }
+
+  function renderNewsPreview() {
+    if (!previewBody || !previewTitle || !previewExcerpt || !previewText || !previewCounter) return;
+    clampPreviewIndex();
+    var total = previewSlideCount();
+    previewCounter.textContent = previewIndex + 1 + " / " + total;
+
+    if (previewIndex === 0) {
+      if (previewBadge) {
+        previewBadge.textContent = "Черновик";
+        previewBadge.hidden = false;
+      }
+      previewTitle.textContent = fTitle.value.trim() || "Заголовок";
+      previewExcerpt.textContent = fExcerpt.value.trim() || "Краткое описание";
+      previewText.textContent = firstBodyParagraph(fBody.value) || "Текст новости…";
+      var imgSrc = (fImagePreview && !fImagePreview.hidden && fImagePreview.src) || fImage.value.trim();
+      if (imgSrc && previewImg) {
+        previewImg.src = imgSrc;
+        previewImg.hidden = false;
+      } else if (previewImg) {
+        previewImg.hidden = true;
+        previewImg.removeAttribute("src");
+      }
+      return;
+    }
+
+    var item = newsCache[previewIndex - 1];
+    if (!item) return;
+    if (previewBadge) {
+      previewBadge.textContent = "Опубликовано";
+      previewBadge.hidden = false;
+    }
+    previewTitle.textContent = item.title || "";
+    previewExcerpt.textContent = item.excerpt || "";
+    previewText.textContent = firstBodyParagraph(item.body) || "";
+    var url = String(item.imageUrl || "").trim();
+    if (url && previewImg) {
+      previewImg.src = url;
+      previewImg.hidden = false;
+    } else if (previewImg) {
+      previewImg.hidden = true;
+      previewImg.removeAttribute("src");
+    }
+  }
+
+  function scheduleBodyPreview() {
+    if (previewIndex !== 0) return;
+    if (bodyPreviewTimer) clearTimeout(bodyPreviewTimer);
+    bodyPreviewTimer = setTimeout(function () {
+      bodyPreviewTimer = null;
+      renderNewsPreview();
+    }, 150);
+  }
+
   function setFormMsg(text, isErr) {
     formMsg.textContent = text || "";
     formMsg.style.color = isErr ? "#f87171" : "";
@@ -131,7 +275,10 @@
     }
     formTitle.textContent = "Новая новость";
     setFormMsg("");
+    previewIndex = 0;
+    renderNewsPreview();
   }
+
   function resetShotForm() {
     shotEditId.value = "";
     shotTitle.value = "";
@@ -158,9 +305,11 @@
     imgEl.src = url;
     imgEl.hidden = false;
   }
+
   function resetServerForm() {
     serverEditId.value = "";
     if (serverImage) serverImage.value = "";
+    syncServerFileLabel();
     serverTitle.value = "";
     serverTagline.value = "";
     serverMeta1.value = "";
@@ -192,10 +341,15 @@
   async function loadList() {
     listMsg.textContent = "";
     listEl.innerHTML = "";
+    newsCache = [];
     try {
       var items = await apiJson("GET", "/admin/news");
-      if (!Array.isArray(items) || !items.length) {
+      if (!Array.isArray(items)) items = [];
+      newsCache = items;
+      if (!items.length) {
         listEl.innerHTML = "<li>Нет новостей</li>";
+        previewIndex = 0;
+        renderNewsPreview();
         return;
       }
       items.forEach(function (item) {
@@ -233,11 +387,14 @@
         li.appendChild(actions);
         listEl.appendChild(li);
       });
+      clampPreviewIndex();
+      renderNewsPreview();
     } catch (e) {
       listMsg.textContent = e.message || String(e);
       listMsg.style.color = "#f87171";
     }
   }
+
   async function loadShotList() {
     shotListMsg.textContent = "";
     shotList.innerHTML = "";
@@ -292,11 +449,13 @@
       shotListMsg.style.color = "#f87171";
     }
   }
+
   async function loadMediaList() {
     mediaItems = await apiJson("GET", "/admin/media");
     if (!Array.isArray(mediaItems)) mediaItems = [];
     renderMediaTiles();
   }
+
   async function loadServerList() {
     serverListMsg.textContent = "";
     serverList.innerHTML = "";
@@ -373,8 +532,19 @@
     setPreview(fImagePreview, item.imageUrl || "");
     formTitle.textContent = "Редактирование: " + item.slug;
     setFormMsg("");
+    var idx = -1;
+    for (var i = 0; i < newsCache.length; i++) {
+      if (newsCache[i].slug === item.slug) {
+        idx = i;
+        break;
+      }
+    }
+    previewIndex = idx >= 0 ? idx + 1 : 0;
+    clampPreviewIndex();
+    renderNewsPreview();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
   function startShotEdit(item) {
     shotEditId.value = item.id;
     shotTitle.value = item.title || "";
@@ -388,28 +558,28 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function closeMediaModal() {
-    if (!mediaModal) return;
-    mediaModal.hidden = true;
-    mediaModal.setAttribute("aria-hidden", "true");
-    mediaTarget = "";
+  function focusMediaSection() {
+    if (mediaRoot && mediaRoot.scrollIntoView) {
+      mediaRoot.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }
-  function openMediaModal(target) {
-    if (!mediaModal) return;
+
+  function setMediaTarget(target) {
     mediaTarget = target;
-    mediaModal.hidden = false;
-    mediaModal.setAttribute("aria-hidden", "false");
     mediaMsg.textContent = "";
     void loadMediaList().catch(function (e) {
       mediaMsg.textContent = e.message || String(e);
       mediaMsg.style.color = "#f87171";
     });
+    focusMediaSection();
   }
+
   function getSelectedMediaIdForTarget() {
     if (mediaTarget === "news") return fImageId.value || "";
     if (mediaTarget === "shot") return shotImageId.value || "";
     return "";
   }
+
   function applySelectedMedia(item) {
     if (!item) return;
     if (mediaTarget === "news") {
@@ -421,8 +591,10 @@
       shotUrl.value = item.url || "";
       setPreview(shotImagePreview, item.url || "");
     }
-    closeMediaModal();
+    renderMediaTiles();
+    if (previewIndex === 0) renderNewsPreview();
   }
+
   async function deleteMediaItem(item) {
     if (!item) return;
     if (!confirm("Удалить картинку из библиотеки и отвязать от новостей/скриншотов?")) return;
@@ -440,7 +612,9 @@
     await loadMediaList();
     await loadList();
     await loadShotList();
+    renderNewsPreview();
   }
+
   function renderMediaTiles() {
     if (!mediaList) return;
     mediaList.innerHTML = "";
@@ -485,9 +659,11 @@
       mediaList.appendChild(tile);
     });
   }
+
   function startServerEdit(item) {
     serverEditId.value = item.id;
     if (serverImage) serverImage.value = "";
+    syncServerFileLabel();
     serverTitle.value = item.title || "";
     serverTagline.value = item.tagline || "";
     serverMeta1.value = item.meta1 || "";
@@ -511,6 +687,7 @@
       alert(e.message || String(e));
     }
   }
+
   async function deleteShot(id) {
     if (!confirm("Удалить скриншот?")) return;
     try {
@@ -521,6 +698,7 @@
       alert(e.message || String(e));
     }
   }
+
   async function deleteServer(id) {
     if (!confirm("Удалить карточку сервера?")) return;
     try {
@@ -539,10 +717,16 @@
     if (newsModePanel) newsModePanel.hidden = !isNews;
     if (shotModePanel) shotModePanel.hidden = !isScreenshots;
     if (serverModePanel) serverModePanel.hidden = !isServers;
+    if (isNews) placeMediaHost("news");
+    else if (isScreenshots) placeMediaHost("screenshots");
+    else placeMediaHost("servers");
     modeBtns.forEach(function (btn) {
       var active = btn.getAttribute("data-admin-mode-btn") === mode;
       btn.classList.toggle("is-active", active);
     });
+    if (isNews || isScreenshots) {
+      void loadMediaList().catch(function () {});
+    }
   }
 
   modeBtns.forEach(function (btn) {
@@ -550,6 +734,21 @@
       switchMode(btn.getAttribute("data-admin-mode-btn"));
     });
   });
+
+  if (previewPrev) {
+    previewPrev.addEventListener("click", function () {
+      previewIndex -= 1;
+      if (previewIndex < 0) previewIndex = previewSlideCount() - 1;
+      renderNewsPreview();
+    });
+  }
+  if (previewNext) {
+    previewNext.addEventListener("click", function () {
+      previewIndex += 1;
+      if (previewIndex >= previewSlideCount()) previewIndex = 0;
+      renderNewsPreview();
+    });
+  }
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -626,18 +825,31 @@
 
   if (newsPickImageBtn) {
     newsPickImageBtn.addEventListener("click", function () {
-      openMediaModal("news");
+      setMediaTarget("news");
     });
   }
   if (shotPickImageBtn) {
     shotPickImageBtn.addEventListener("click", function () {
-      openMediaModal("shot");
+      setMediaTarget("shot");
     });
+  }
+
+  ["input", "change"].forEach(function (ev) {
+    if (fTitle) fTitle.addEventListener(ev, function () {
+      if (previewIndex === 0) renderNewsPreview();
+    });
+    if (fExcerpt) fExcerpt.addEventListener(ev, function () {
+      if (previewIndex === 0) renderNewsPreview();
+    });
+  });
+  if (fBody) {
+    fBody.addEventListener("input", scheduleBodyPreview);
   }
   if (fImage) {
     fImage.addEventListener("input", function () {
       fImageId.value = "";
       setPreview(fImagePreview, fImage.value);
+      if (previewIndex === 0) renderNewsPreview();
     });
   }
   if (shotUrl) {
@@ -646,12 +858,7 @@
       setPreview(shotImagePreview, shotUrl.value);
     });
   }
-  mediaCloseEls.forEach(function (el) {
-    el.addEventListener("click", closeMediaModal);
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && mediaModal && !mediaModal.hidden) closeMediaModal();
-  });
+
   if (mediaUploadForm) {
     mediaUploadForm.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -675,6 +882,7 @@
         });
         if (!r.ok) throw new Error(data.error || "Ошибка " + r.status);
         mediaUploadInput.value = "";
+        syncMediaFileLabel();
         mediaMsg.textContent = "Загрузка завершена.";
         await loadMediaList();
       } catch (err) {
@@ -683,6 +891,7 @@
       }
     });
   }
+
   serverForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     setServerFormMsg("");
@@ -730,19 +939,26 @@
     }
   });
 
+  bindMgFileInput(mediaUploadInput);
+  bindMgFileInput(serverImage);
+
   (async function init() {
     var ok = await checkAdmin();
     if (!ok) {
       denied.hidden = false;
       app.hidden = true;
+      if (adminHint) adminHint.textContent = "";
       return;
     }
     denied.hidden = true;
     app.hidden = false;
+    await setAdminHintFromMe();
     fDate.value = localIsoForInput(new Date());
     switchMode("news");
+    renderNewsPreview();
     await loadList();
     await loadShotList();
     await loadServerList();
+    await loadMediaList();
   })();
 })();
