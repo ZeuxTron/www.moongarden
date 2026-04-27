@@ -189,7 +189,7 @@
   function normalizeMcNick(raw) {
     var n = (raw || "").trim();
     if (!NICK_RE.test(n)) return null;
-    return n.toLowerCase();
+    return n;
   }
 
   function validateSkinImage(file) {
