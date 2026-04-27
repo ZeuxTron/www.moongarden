@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="website.css?v=20260469" />
+    <link rel="stylesheet" href="website.css?v=20260481" />
   </head>
   <body>
     <div class="site-root">
@@ -530,6 +530,49 @@
       <div class="site-toast__body" id="site-toast-body"></div>
     </div>
 
+    <div
+      class="site-lightbox"
+      id="site-lightbox"
+      hidden
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Просмотр изображения"
+    >
+      <div class="site-lightbox__backdrop" data-lightbox-close tabindex="-1" aria-hidden="true"></div>
+      <div class="site-lightbox__dialog">
+        <button type="button" class="site-lightbox__close" data-lightbox-close aria-label="Закрыть">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="site-lightbox__nav site-lightbox__nav--prev"
+          data-lightbox-prev
+          hidden
+          aria-label="Предыдущее изображение"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="site-lightbox__nav site-lightbox__nav--next"
+          data-lightbox-next
+          hidden
+          aria-label="Следующее изображение"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+        <img class="site-lightbox__img" alt="" decoding="async" />
+        <p class="site-lightbox__caption" data-lightbox-caption hidden></p>
+      </div>
+    </div>
+
     <div class="site-modal" id="docs-modal" hidden aria-hidden="true" role="presentation">
       <div class="site-modal__backdrop" data-doc-close tabindex="-1" aria-hidden="true"></div>
       <div class="site-modal__panel docs-modal__panel" role="dialog" aria-modal="true" aria-labelledby="docs-modal-title" tabindex="-1">
@@ -548,8 +591,8 @@
     <script src="https://unpkg.com/skinview3d@3.2.0/bundles/skinview3d.bundle.js"></script>
     <script src="api-config.js?v=1"></script>
     <script src="website-account.js?v=1"></script>
-    <script src="website.js?v=20260473"></script>
-    <script src="website-screenshots.js?v=1"></script>
-    <script src="website-news.js?v=1"></script>
+    <script src="website.js?v=20260481"></script>
+    <script src="website-screenshots.js?v=20260481"></script>
+    <script src="website-news.js?v=20260481"></script>
   </body>
 </html>

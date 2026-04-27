@@ -6,6 +6,21 @@
   var statusEl = document.getElementById("news-fetch-status");
   if (!section || !root) return;
 
+  section.addEventListener("click", function (e) {
+    var hero = e.target.closest(".site-news__hero");
+    if (!hero || !section.contains(hero)) return;
+    if (!window.siteLightbox || typeof window.siteLightbox.open !== "function") return;
+    var src = hero.currentSrc || hero.src;
+    if (!src) return;
+    var art = hero.closest(".site-news-article");
+    var titleEl = art && art.querySelector(".site-news-title");
+    var caption = titleEl ? String(titleEl.textContent || "").trim() : "";
+    window.siteLightbox.open({
+      items: [{ src: src, alt: hero.getAttribute("alt") || "", caption: caption }],
+      index: 0,
+    });
+  });
+
   var HERO_VARIANTS = ["site-news__hero--tl", "site-news__hero--lc", "site-news__hero--br"];
   var COLD_WAIT_MS = 20000;
   var FETCH_TIMEOUT_MS = 8000;
@@ -157,7 +172,7 @@
       heroClass +
       '" src="' +
       imgUrl +
-      '" width="1200" height="675" alt="" decoding="async" />' +
+      '" width="1200" height="675" alt="" decoding="async" title="Открыть в полный размер" />' +
       '<p class="site-news-lead">' +
       excerpt +
       "</p>" +
