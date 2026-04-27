@@ -25,7 +25,7 @@
       for (var i = 0; i < items.length; i++) {
         var item = items[i] || {};
         var title = escapeHtml(item.title || "Скриншот " + (i + 1));
-        var src = escapeHtml(item.imageUrl || "");
+        var src = escapeHtml((item.image && item.image.url) || item.imageUrl || "");
         if (!src) continue;
         shotsHtml +=
           '<button type="button" class="gallery-shot' +

@@ -21,8 +21,9 @@
   }
 
   function absApiUrl(path) {
-    var base = String(API_BASE || "").replace(/\/$/, "");
     var p = String(path || "");
+    if (p.startsWith("http://") || p.startsWith("https://")) return p;
+    var base = String(API_BASE || "").replace(/\/$/, "");
     if (!p.startsWith("/")) p = "/" + p;
     return base + p;
   }

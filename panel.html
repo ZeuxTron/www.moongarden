@@ -146,6 +146,53 @@
       #admin-app[hidden] {
         display: none !important;
       }
+      .admin-media-preview {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .admin-media-preview[hidden] {
+        display: none;
+      }
+      .admin-media-picker {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+        max-height: 54vh;
+        overflow: auto;
+      }
+      .admin-media-tile {
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+        border-radius: 10px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.28);
+      }
+      .admin-media-tile.is-selected {
+        border-color: rgba(147, 197, 253, 0.65);
+        box-shadow: 0 0 0 1px rgba(147, 197, 253, 0.42) inset;
+      }
+      .admin-media-tile img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 8px;
+        display: block;
+      }
+      .admin-media-tile-title {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-muted, #bbb);
+        word-break: break-word;
+      }
+      .admin-media-tile-actions {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+      }
     </style>
   </head>
   <body>
@@ -195,8 +242,13 @@
                   <input id="f-date" name="publishedAt" type="datetime-local" />
                 </label>
                 <label class="admin-field" for="f-image">
-                  <span>Картинка (PNG / JPEG / WebP; при редактировании можно не менять)</span>
-                  <input id="f-image" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+                  <span>Картинка (выбор из галереи или URL)</span>
+                  <input id="f-image-id" name="imageId" type="hidden" />
+                  <div class="admin-actions" style="margin-top: 0">
+                    <button type="button" class="btn btn--ghost" id="news-pick-image">Выбрать из галереи</button>
+                  </div>
+                  <input id="f-image" name="imageUrl" type="url" placeholder="https://..." />
+                  <img id="f-image-preview" class="admin-media-preview" hidden alt="" />
                 </label>
                 <div class="admin-actions">
                   <button type="submit" class="btn btn--primary" id="btn-save">Сохранить</button>
@@ -222,8 +274,13 @@
                   <input id="shot-title" name="title" type="text" required />
                 </label>
                 <label class="admin-field" for="shot-url">
-                  <span>URL изображения (Google Drive прямой или любой https)</span>
+                  <span>Картинка (выбор из галереи или URL)</span>
+                  <input id="shot-image-id" name="imageId" type="hidden" />
+                  <div class="admin-actions" style="margin-top: 0">
+                    <button type="button" class="btn btn--ghost" id="shot-pick-image">Выбрать из галереи</button>
+                  </div>
                   <input id="shot-url" name="imageUrl" type="url" required placeholder="https://..." />
+                  <img id="shot-image-preview" class="admin-media-preview" hidden alt="" />
                 </label>
                 <label class="admin-field" for="shot-order">
                   <span>Порядок (меньше = выше)</span>
@@ -299,6 +356,26 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="site-modal" id="media-modal" hidden aria-hidden="true">
+      <div class="site-modal__backdrop" data-media-close></div>
+      <section class="site-modal__panel" role="dialog" aria-modal="true" aria-label="Галерея">
+        <header class="site-modal__header">
+          <h2>Галерея картинок</h2>
+          <button type="button" class="site-modal__close" data-media-close aria-label="Закрыть">✕</button>
+        </header>
+        <div class="site-modal__body">
+          <form id="media-upload-form" class="admin-field">
+            <span>Загрузить в Google Drive</span>
+            <input id="media-upload-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            <div class="admin-actions" style="margin-top: 0">
+              <button type="submit" class="btn btn--primary">Загрузить</button>
+            </div>
+            <p class="admin-msg" id="media-msg" role="status"></p>
+          </form>
+          <div id="media-picker-list" class="admin-media-picker"></div>
+        </div>
+      </section>
     </div>
     <script src="api-config.js?v=1"></script>
     <script src="admin-news.js?v=1"></script>
