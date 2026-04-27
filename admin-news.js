@@ -19,6 +19,9 @@
   var fBody = document.getElementById("f-body");
   var fDate = document.getElementById("f-date");
   var fImage = document.getElementById("f-image");
+  var fImageId = document.getElementById("f-image-id");
+  var fImagePreview = document.getElementById("f-image-preview");
+  var newsPickImageBtn = document.getElementById("news-pick-image");
   var formMsg = document.getElementById("form-msg");
   var listEl = document.getElementById("news-list");
   var listMsg = document.getElementById("list-msg");
@@ -29,6 +32,9 @@
   var shotEditId = document.getElementById("shot-edit-id");
   var shotTitle = document.getElementById("shot-title");
   var shotUrl = document.getElementById("shot-url");
+  var shotImageId = document.getElementById("shot-image-id");
+  var shotImagePreview = document.getElementById("shot-image-preview");
+  var shotPickImageBtn = document.getElementById("shot-pick-image");
   var shotOrder = document.getElementById("shot-order");
   var shotVisible = document.getElementById("shot-visible");
   var shotFormMsg = document.getElementById("shot-form-msg");
@@ -52,7 +58,16 @@
   var serverListMsg = document.getElementById("server-list-msg");
   var serverResetBtn = document.getElementById("server-reset");
 
+  var mediaModal = document.getElementById("media-modal");
+  var mediaList = document.getElementById("media-picker-list");
+  var mediaMsg = document.getElementById("media-msg");
+  var mediaUploadForm = document.getElementById("media-upload-form");
+  var mediaUploadInput = document.getElementById("media-upload-input");
+  var mediaCloseEls = Array.prototype.slice.call(document.querySelectorAll("[data-media-close]"));
+
   if (!form || !app || !denied || !shotForm || !serverForm) return;
+  var mediaItems = [];
+  var mediaTarget = "";
 
   function token() {
     try {
@@ -108,18 +123,40 @@
     fExcerpt.value = "";
     fBody.value = "";
     fDate.value = "";
+    fImageId.value = "";
     fImage.value = "";
+    if (fImagePreview) {
+      fImagePreview.hidden = true;
+      fImagePreview.removeAttribute("src");
+    }
     formTitle.textContent = "Новая новость";
     setFormMsg("");
   }
   function resetShotForm() {
     shotEditId.value = "";
     shotTitle.value = "";
+    shotImageId.value = "";
     shotUrl.value = "";
+    if (shotImagePreview) {
+      shotImagePreview.hidden = true;
+      shotImagePreview.removeAttribute("src");
+    }
     shotOrder.value = "0";
     shotVisible.checked = true;
     shotFormTitle.textContent = "Новый скриншот";
     setShotFormMsg("");
+  }
+
+  function setPreview(imgEl, src) {
+    if (!imgEl) return;
+    var url = String(src || "").trim();
+    if (!url) {
+      imgEl.hidden = true;
+      imgEl.removeAttribute("src");
+      return;
+    }
+    imgEl.src = url;
+    imgEl.hidden = false;
   }
   function resetServerForm() {
     serverEditId.value = "";
@@ -255,6 +292,11 @@
       shotListMsg.style.color = "#f87171";
     }
   }
+  async function loadMediaList() {
+    mediaItems = await apiJson("GET", "/admin/media");
+    if (!Array.isArray(mediaItems)) mediaItems = [];
+    renderMediaTiles();
+  }
   async function loadServerList() {
     serverListMsg.textContent = "";
     serverList.innerHTML = "";
@@ -327,6 +369,8 @@
       if (!Number.isNaN(d.getTime())) fDate.value = localIsoForInput(d);
     } catch (e) {}
     fImage.value = "";
+    fImageId.value = item.imageId || "";
+    setPreview(fImagePreview, item.imageUrl || "");
     formTitle.textContent = "Редактирование: " + item.slug;
     setFormMsg("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -334,12 +378,112 @@
   function startShotEdit(item) {
     shotEditId.value = item.id;
     shotTitle.value = item.title || "";
+    shotImageId.value = item.imageId || "";
     shotUrl.value = item.imageUrl || "";
+    setPreview(shotImagePreview, item.imageUrl || "");
     shotOrder.value = String(item.order || 0);
     shotVisible.checked = item.isVisible !== false;
     shotFormTitle.textContent = "Редактирование скриншота";
     setShotFormMsg("");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function closeMediaModal() {
+    if (!mediaModal) return;
+    mediaModal.hidden = true;
+    mediaModal.setAttribute("aria-hidden", "true");
+    mediaTarget = "";
+  }
+  function openMediaModal(target) {
+    if (!mediaModal) return;
+    mediaTarget = target;
+    mediaModal.hidden = false;
+    mediaModal.setAttribute("aria-hidden", "false");
+    mediaMsg.textContent = "";
+    void loadMediaList().catch(function (e) {
+      mediaMsg.textContent = e.message || String(e);
+      mediaMsg.style.color = "#f87171";
+    });
+  }
+  function getSelectedMediaIdForTarget() {
+    if (mediaTarget === "news") return fImageId.value || "";
+    if (mediaTarget === "shot") return shotImageId.value || "";
+    return "";
+  }
+  function applySelectedMedia(item) {
+    if (!item) return;
+    if (mediaTarget === "news") {
+      fImageId.value = item.fileId || item.id || "";
+      fImage.value = item.url || "";
+      setPreview(fImagePreview, item.url || "");
+    } else if (mediaTarget === "shot") {
+      shotImageId.value = item.fileId || item.id || "";
+      shotUrl.value = item.url || "";
+      setPreview(shotImagePreview, item.url || "");
+    }
+    closeMediaModal();
+  }
+  async function deleteMediaItem(item) {
+    if (!item) return;
+    if (!confirm("Удалить картинку из библиотеки и отвязать от новостей/скриншотов?")) return;
+    await apiJson("DELETE", "/admin/media/" + encodeURIComponent(item.fileId || item.id));
+    if ((fImageId.value || "") === (item.fileId || item.id)) {
+      fImageId.value = "";
+      fImage.value = "";
+      setPreview(fImagePreview, "");
+    }
+    if ((shotImageId.value || "") === (item.fileId || item.id)) {
+      shotImageId.value = "";
+      shotUrl.value = "";
+      setPreview(shotImagePreview, "");
+    }
+    await loadMediaList();
+    await loadList();
+    await loadShotList();
+  }
+  function renderMediaTiles() {
+    if (!mediaList) return;
+    mediaList.innerHTML = "";
+    if (!mediaItems.length) {
+      mediaList.innerHTML = "<p class='admin-msg'>Библиотека пуста. Загрузите первое изображение.</p>";
+      return;
+    }
+    var selectedId = getSelectedMediaIdForTarget();
+    mediaItems.forEach(function (item) {
+      var tile = document.createElement("article");
+      tile.className = "admin-media-tile" + ((item.fileId || item.id) === selectedId ? " is-selected" : "");
+      var img = document.createElement("img");
+      img.src = item.thumbUrl || item.url;
+      img.alt = "";
+      var title = document.createElement("div");
+      title.className = "admin-media-tile-title";
+      title.textContent = item.title || item.fileId || "image";
+      var actions = document.createElement("div");
+      actions.className = "admin-media-tile-actions";
+      var pickBtn = document.createElement("button");
+      pickBtn.type = "button";
+      pickBtn.className = "btn btn--ghost";
+      pickBtn.textContent = "Выбрать";
+      pickBtn.addEventListener("click", function () {
+        applySelectedMedia(item);
+      });
+      var delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn btn--ghost";
+      delBtn.textContent = "Удалить";
+      delBtn.addEventListener("click", function () {
+        void deleteMediaItem(item).catch(function (e) {
+          mediaMsg.textContent = e.message || String(e);
+          mediaMsg.style.color = "#f87171";
+        });
+      });
+      actions.appendChild(pickBtn);
+      actions.appendChild(delBtn);
+      tile.appendChild(img);
+      tile.appendChild(title);
+      tile.appendChild(actions);
+      mediaList.appendChild(tile);
+    });
   }
   function startServerEdit(item) {
     serverEditId.value = item.id;
@@ -410,39 +554,30 @@
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     setFormMsg("");
-    var fd = new FormData();
-    fd.append("title", fTitle.value.trim());
-    fd.append("excerpt", fExcerpt.value.trim());
-    fd.append("body", fBody.value.trim());
+    var payload = {
+      title: fTitle.value.trim(),
+      excerpt: fExcerpt.value.trim(),
+      body: fBody.value.trim(),
+      imageId: (fImageId.value || "").trim(),
+      imageUrl: (fImage.value || "").trim(),
+    };
     if (fDate.value) {
       var iso = new Date(fDate.value).toISOString();
-      fd.append("publishedAt", iso);
+      payload.publishedAt = iso;
     }
     var slugVal = fSlug.value.trim();
-    if (slugVal && !editSlug.value) fd.append("slug", slugVal);
-    if (fImage.files && fImage.files[0]) {
-      fd.append("image", fImage.files[0]);
-    } else if (!editSlug.value) {
+    if (slugVal && !editSlug.value) payload.slug = slugVal;
+    if (!payload.imageId && !payload.imageUrl) {
       setFormMsg("Добавьте изображение.", true);
       return;
     }
 
     var isEdit = Boolean(editSlug.value);
-    var url = isEdit
-      ? API_BASE.replace(/\/$/, "") + "/admin/news/" + encodeURIComponent(editSlug.value)
-      : API_BASE.replace(/\/$/, "") + "/admin/news";
+    var path = isEdit ? "/admin/news/" + encodeURIComponent(editSlug.value) : "/admin/news";
     var method = isEdit ? "PUT" : "POST";
 
     try {
-      var r = await fetch(url, {
-        method: method,
-        headers: { Authorization: "Bearer " + token() },
-        body: fd,
-      });
-      var data = await r.json().catch(function () {
-        return {};
-      });
-      if (!r.ok) throw new Error(data.error || "Ошибка " + r.status);
+      await apiJson(method, path, payload);
       setFormMsg("Сохранено.");
       fSlug.disabled = false;
       resetForm();
@@ -469,6 +604,7 @@
     setShotFormMsg("");
     var payload = {
       title: shotTitle.value.trim(),
+      imageId: (shotImageId.value || "").trim(),
       imageUrl: shotUrl.value.trim(),
       order: Number(shotOrder.value || 0),
       isVisible: !!shotVisible.checked,
@@ -487,6 +623,66 @@
       setShotFormMsg(err.message || String(err), true);
     }
   });
+
+  if (newsPickImageBtn) {
+    newsPickImageBtn.addEventListener("click", function () {
+      openMediaModal("news");
+    });
+  }
+  if (shotPickImageBtn) {
+    shotPickImageBtn.addEventListener("click", function () {
+      openMediaModal("shot");
+    });
+  }
+  if (fImage) {
+    fImage.addEventListener("input", function () {
+      fImageId.value = "";
+      setPreview(fImagePreview, fImage.value);
+    });
+  }
+  if (shotUrl) {
+    shotUrl.addEventListener("input", function () {
+      shotImageId.value = "";
+      setPreview(shotImagePreview, shotUrl.value);
+    });
+  }
+  mediaCloseEls.forEach(function (el) {
+    el.addEventListener("click", closeMediaModal);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && mediaModal && !mediaModal.hidden) closeMediaModal();
+  });
+  if (mediaUploadForm) {
+    mediaUploadForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      mediaMsg.textContent = "";
+      mediaMsg.style.color = "";
+      if (!mediaUploadInput.files || !mediaUploadInput.files[0]) {
+        mediaMsg.textContent = "Выберите файл перед загрузкой.";
+        mediaMsg.style.color = "#f87171";
+        return;
+      }
+      try {
+        var fd = new FormData();
+        fd.append("file", mediaUploadInput.files[0]);
+        var r = await fetch(API_BASE.replace(/\/$/, "") + "/admin/media", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token() },
+          body: fd,
+        });
+        var data = await r.json().catch(function () {
+          return {};
+        });
+        if (!r.ok) throw new Error(data.error || "Ошибка " + r.status);
+        mediaUploadInput.value = "";
+        mediaMsg.textContent = "Загрузка завершена.";
+        await loadMediaList();
+      } catch (err) {
+        mediaMsg.textContent = err.message || String(err);
+        mediaMsg.style.color = "#f87171";
+      }
+    });
+  }
   serverForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     setServerFormMsg("");
