@@ -37,7 +37,7 @@
           src +
           '" alt="' +
           title +
-          '" decoding="async" />' +
+          '" decoding="async" referrerpolicy="no-referrer" />' +
           "</button>";
         dotsHtml +=
           '<button type="button" data-index="' +

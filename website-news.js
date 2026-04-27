@@ -124,12 +124,20 @@
       "</div>";
   }
 
+  function heroClassForItem(item, index) {
+    var k = String(item.heroLayout || "").trim().toLowerCase();
+    if (k === "tl" || k === "lc" || k === "br") {
+      return "site-news__hero--" + k;
+    }
+    return HERO_VARIANTS[index % HERO_VARIANTS.length];
+  }
+
   function buildArticleHtml(item, index) {
     var slug = escapeHtml(item.slug);
     var title = escapeHtml(item.title);
     var excerpt = escapeHtml(item.excerpt);
     var imgUrl = escapeHtml(absApiUrl(item.imageUrl));
-    var heroClass = HERO_VARIANTS[index % HERO_VARIANTS.length];
+    var heroClass = heroClassForItem(item, index);
     var paras = String(item.body || "")
       .split(/\n\s*\n/)
       .map(function (x) {
@@ -172,7 +180,7 @@
       heroClass +
       '" src="' +
       imgUrl +
-      '" width="1200" height="675" alt="" decoding="async" title="Открыть в полный размер" />' +
+      '" width="1200" height="675" alt="" decoding="async" referrerpolicy="no-referrer" title="Открыть в полный размер" />' +
       '<p class="site-news-lead">' +
       excerpt +
       "</p>" +

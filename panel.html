@@ -30,29 +30,53 @@
       .admin-top-actions {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 10px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         margin-bottom: 14px;
       }
       .admin-top-actions .admin-mode-switch {
         margin-bottom: 0;
+        flex: 1;
+        min-width: 0;
       }
-      .admin-top-actions .admin-back-link {
-        margin-left: auto;
+      .admin-panel-close {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        line-height: 1;
+      }
+      .admin-panel-close svg {
+        display: block;
       }
       .admin-news-page .admin-hint {
         color: var(--text-muted, #888);
         font-size: 14px;
         margin-bottom: 24px;
       }
-      .admin-news-grid {
+      #admin-app {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      #admin-app > .admin-mode-panel {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .admin-mode-panel.admin-news-grid {
         display: grid;
         gap: 28px;
+        width: 100%;
       }
       @media (min-width: 900px) {
-        .admin-news-grid {
-          grid-template-columns: minmax(0, 1.38fr) minmax(0, 0.92fr);
-          align-items: start;
+        .admin-mode-panel.admin-news-grid {
+          grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.28fr);
+          align-items: stretch;
         }
       }
       .admin-panel {
@@ -60,6 +84,7 @@
         border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
         border-radius: 12px;
         padding: 20px;
+        min-width: 0;
       }
       .admin-panel h2 {
         margin: 0 0 16px;
@@ -88,13 +113,18 @@
         color: var(--text-muted, #888);
       }
       .admin-field input,
-      .admin-field textarea {
+      .admin-field textarea,
+      .admin-field select {
         border-radius: 8px;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
         background: rgba(10, 8, 22, 0.55);
         color: var(--text, #fff);
         padding: 8px 10px;
         font: inherit;
+      }
+      .admin-field select {
+        cursor: pointer;
+        max-width: 100%;
       }
       .admin-field textarea {
         min-height: 120px;
@@ -153,6 +183,7 @@
       }
       .admin-mode-switch {
         display: inline-flex;
+        flex-wrap: wrap;
         gap: 8px;
         padding: 4px;
         border-radius: 10px;
@@ -181,18 +212,37 @@
         display: none;
       }
       .admin-media-picker {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 12px;
         margin-top: 14px;
-        max-height: 280px;
-        overflow: auto;
+        padding: 4px 2px 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+      }
+      .admin-media-picker__empty {
+        flex: 1 1 100%;
+        width: 100%;
+        text-align: center;
+        margin: 0;
+        padding: 20px 12px;
+        align-self: center;
       }
       .admin-media-tile {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        width: 140px;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
         border-radius: 10px;
         padding: 8px;
         background: rgba(0, 0, 0, 0.28);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
       }
       .admin-media-tile.is-selected {
         border-color: rgba(147, 197, 253, 0.65);
@@ -208,14 +258,25 @@
       .admin-media-tile-title {
         margin-top: 8px;
         font-size: 11px;
+        line-height: 1.3;
         color: var(--text-muted, #bbb);
         word-break: break-word;
+        flex: 1 1 auto;
+        min-height: 2.6em;
       }
       .admin-media-tile-actions {
-        margin-top: 8px;
-        display: flex;
+        margin-top: auto;
+        padding-top: 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 6px;
-        flex-wrap: wrap;
+        width: 100%;
+      }
+      .admin-media-tile-actions .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 6px 6px;
+        font-size: 12px;
       }
       .admin-news-preview {
         border-radius: 10px;
@@ -246,12 +307,38 @@
         max-height: 320px;
         overflow: auto;
       }
-      .admin-news-preview__body img {
-        width: 100%;
-        max-height: 140px;
+      .admin-news-preview__body::after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+      .admin-news-preview__body .site-news__hero {
+        display: block;
         object-fit: cover;
+        object-position: center;
         border-radius: 8px;
-        margin-bottom: 10px;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+        box-sizing: border-box;
+      }
+      .admin-news-preview__body .site-news__hero--tl {
+        float: left;
+        width: min(40%, 100px);
+        max-height: 72px;
+        margin: 0 10px 8px 0;
+      }
+      .admin-news-preview__body .site-news__hero--lc {
+        float: left;
+        width: min(40%, 100px);
+        max-height: 72px;
+        margin: 0.2rem 10px 8px 0;
+        margin-top: 0.75rem;
+      }
+      .admin-news-preview__body .site-news__hero--br {
+        float: right;
+        width: min(40%, 100px);
+        max-height: 72px;
+        margin: 8px 0 6px 10px;
+        clear: right;
       }
       .admin-news-preview__body h4 {
         margin: 0 0 8px;
@@ -280,6 +367,42 @@
       #admin-media-park {
         display: none;
       }
+      .admin-news-preview-published {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 24px;
+        align-items: flex-start;
+      }
+      .admin-news-preview-published > .admin-panel__section {
+        flex: 1 1 300px;
+        min-width: 0;
+        margin-bottom: 0;
+      }
+      .admin-news-preview-published__hint {
+        font-size: 12px;
+        color: var(--text-muted, #888);
+        margin: 0 0 10px;
+        line-height: 1.4;
+      }
+      .admin-news-preview-published .admin-list {
+        max-height: min(420px, 55vh);
+      }
+      @keyframes admin-media-pulse {
+        0%,
+        100% {
+          outline-color: rgba(147, 197, 253, 0.25);
+        }
+        50% {
+          outline-color: rgba(147, 197, 253, 0.85);
+        }
+      }
+      #admin-media-root.admin-media-root--pulse {
+        outline: 2px solid rgba(147, 197, 253, 0.5);
+        outline-offset: 6px;
+        border-radius: 14px;
+        animation: admin-media-pulse 0.55s ease 2;
+      }
     </style>
   </head>
   <body>
@@ -291,7 +414,16 @@
             <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
             <button type="button" class="btn btn--ghost" data-admin-mode-btn="servers">Серверы</button>
           </div>
-          <a class="btn btn--ghost admin-back-link" href="index.html">Назад</a>
+          <a
+            class="btn btn--ghost admin-panel-close"
+            href="index.html"
+            aria-label="Закрыть панель, на главную"
+            title="На главную"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </a>
         </div>
         <h1>Панель контента</h1>
         <p class="admin-hint" id="admin-hint"></p>
@@ -299,7 +431,7 @@
           <strong>Нет доступа.</strong> Нужна авторизация и флаг администратора.
           <p><a href="index.html">На главную</a></p>
         </div>
-        <div id="admin-app" class="admin-news-grid" hidden>
+        <div id="admin-app" hidden>
           <div id="admin-mode-news" class="admin-mode-panel admin-news-grid">
             <div class="admin-panel">
               <h2 id="form-title">Новая новость</h2>
@@ -325,12 +457,17 @@
                   <span>Дата публикации</span>
                   <input id="f-date" name="publishedAt" type="datetime-local" />
                 </label>
+                <label class="admin-field" for="f-hero-layout">
+                  <span>Расположение картинки в тексте (как на сайте)</span>
+                  <select id="f-hero-layout" name="heroLayout">
+                    <option value="tl">Слева сверху у текста</option>
+                    <option value="lc">Слева, ниже (по центру колонки)</option>
+                    <option value="br">Справа снизу</option>
+                  </select>
+                </label>
                 <label class="admin-field" for="f-image">
-                  <span>Картинка (выбор из галереи или URL)</span>
+                  <span>Картинка (справа в медиа нажмите «Выбрать» на миниатюре или вставьте URL)</span>
                   <input id="f-image-id" name="imageId" type="hidden" />
-                  <div class="admin-actions" style="margin-top: 0">
-                    <button type="button" class="btn btn--ghost" id="news-pick-image">Выбрать из галереи</button>
-                  </div>
                   <input id="f-image" name="imageUrl" type="url" placeholder="https://..." />
                   <img id="f-image-preview" class="admin-media-preview" hidden alt="" />
                 </label>
@@ -343,29 +480,34 @@
             </div>
             <div class="admin-panel">
               <div id="admin-media-host-news"></div>
-              <div class="admin-panel__section" id="admin-news-preview-section">
-                <h3>Предпросмотр</h3>
-                <div class="admin-news-preview">
-                  <div class="admin-news-preview__toolbar">
-                    <span class="admin-news-preview__counter" data-news-preview-counter>1 / 1</span>
-                    <div class="admin-news-preview__nav">
-                      <button type="button" class="btn btn--ghost btn--sm" data-news-preview-prev aria-label="Предыдущая">←</button>
-                      <button type="button" class="btn btn--ghost btn--sm" data-news-preview-next aria-label="Следующая">→</button>
+              <div class="admin-news-preview-published">
+                <div class="admin-panel__section" id="admin-news-preview-section">
+                  <h3>Предпросмотр</h3>
+                  <div class="admin-news-preview">
+                    <div class="admin-news-preview__toolbar">
+                      <span class="admin-news-preview__counter" data-news-preview-counter>1 / 1</span>
+                      <div class="admin-news-preview__nav">
+                        <button type="button" class="btn btn--ghost btn--sm" data-news-preview-prev aria-label="Предыдущая">←</button>
+                        <button type="button" class="btn btn--ghost btn--sm" data-news-preview-next aria-label="Следующая">→</button>
+                      </div>
+                    </div>
+                    <div class="admin-news-preview__body" data-news-preview-body>
+                      <span class="admin-news-preview__badge">Черновик</span>
+                      <img class="site-news__hero site-news__hero--tl" data-news-preview-img hidden alt="" />
+                      <h4 data-news-preview-title></h4>
+                      <p class="lead" data-news-preview-excerpt></p>
+                      <div class="body-snippet" data-news-preview-text></div>
                     </div>
                   </div>
-                  <div class="admin-news-preview__body" data-news-preview-body>
-                    <span class="admin-news-preview__badge">Черновик</span>
-                    <img data-news-preview-img hidden alt="" />
-                    <h4 data-news-preview-title></h4>
-                    <p class="lead" data-news-preview-excerpt></p>
-                    <div class="body-snippet" data-news-preview-text></div>
-                  </div>
                 </div>
-              </div>
-              <div class="admin-panel__section">
-                <h2>Опубликованные</h2>
-                <ul class="admin-list" id="news-list"></ul>
-                <p class="admin-msg" id="list-msg" role="status"></p>
+                <div class="admin-panel__section">
+                  <h2>Опубликованные</h2>
+                  <p class="admin-news-preview-published__hint">
+                    Порядок в списке совпадает с каруселью на сайте. Кнопки ↑ ↓ меняют позицию.
+                  </p>
+                  <ul class="admin-list" id="news-list"></ul>
+                  <p class="admin-msg" id="list-msg" role="status"></p>
+                </div>
               </div>
             </div>
           </div>
@@ -380,11 +522,8 @@
                   <input id="shot-title" name="title" type="text" required />
                 </label>
                 <label class="admin-field" for="shot-url">
-                  <span>Картинка (выбор из галереи или URL)</span>
+                  <span>Картинка (в медиа нажмите «Выбрать» на миниатюре или вставьте URL)</span>
                   <input id="shot-image-id" name="imageId" type="hidden" />
-                  <div class="admin-actions" style="margin-top: 0">
-                    <button type="button" class="btn btn--ghost" id="shot-pick-image">Выбрать из галереи</button>
-                  </div>
                   <input id="shot-url" name="imageUrl" type="url" required placeholder="https://..." />
                   <img id="shot-image-preview" class="admin-media-preview" hidden alt="" />
                 </label>
@@ -500,6 +639,6 @@
       </div>
     </div>
     <script src="api-config.js?v=1"></script>
-    <script src="admin-news.js?v=20260481"></script>
+    <script src="admin-news.js?v=20260485"></script>
   </body>
 </html>
