@@ -313,6 +313,11 @@ img {
   color: var(--text);
 }
 
+.nav-links a.is-active {
+  color: var(--text);
+  text-shadow: 0 0 16px rgba(167, 139, 250, 0.45);
+}
+
 .btn {
   height: 38px;
   padding: 0 18px;
@@ -1049,13 +1054,13 @@ body.site-modal-open {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(82px, -50%);
+  transform: translate(64px, -50%);
   width: 0;
   overflow: hidden;
   white-space: nowrap;
   color: var(--text-muted);
   font-size: 14px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   animation: mg-loading-dots 1.1s steps(4, end) infinite;
 }
 

@@ -33,6 +33,7 @@
   var cabinetModelOptions = document.querySelectorAll("[data-model-option]");
   var formLogin = document.getElementById("form-login");
   var formRegister = document.getElementById("form-register");
+  var loginSubmitBtn = formLogin ? formLogin.querySelector("button[type='submit']") : null;
   var msgLogin = document.getElementById("account-msg-login");
   var msgRegister = document.getElementById("account-msg-register");
   var authSegmentedHead = document.getElementById("auth-segmented-head");
@@ -601,26 +602,45 @@
   formLogin.addEventListener("submit", async function (e) {
     e.preventDefault();
     msgLogin.textContent = "";
+    var loginBtnText = loginSubmitBtn ? loginSubmitBtn.textContent : "";
+    if (loginSubmitBtn) {
+      loginSubmitBtn.disabled = true;
+      loginSubmitBtn.setAttribute("aria-busy", "true");
+      loginSubmitBtn.textContent = "Входим...";
+    }
     var nick = normalizeMcNick(formLogin.elements.nickname.value);
     var pass = formLogin.elements.password.value;
     if (!nick) {
       msgLogin.textContent = "Ник: латиница, цифры и _, от 3 до 16 символов (как в Minecraft).";
+      if (loginSubmitBtn) {
+        loginSubmitBtn.disabled = false;
+        loginSubmitBtn.setAttribute("aria-busy", "false");
+        loginSubmitBtn.textContent = loginBtnText || "Войти";
+      }
       return;
     }
-    var r = await apiFetch(
-      "POST",
-      "/auth/login",
-      { jsonBody: { username: nick, password: pass }, skipAuth: true }
-    );
-    var data = await r.json().catch(function () { return {}; });
-    if (!r.ok) {
-      msgLogin.textContent = data.error || "Ошибка входа.";
-      return;
+    try {
+      var r = await apiFetch(
+        "POST",
+        "/auth/login",
+        { jsonBody: { username: nick, password: pass }, skipAuth: true }
+      );
+      var data = await r.json().catch(function () { return {}; });
+      if (!r.ok) {
+        msgLogin.textContent = data.error || "Ошибка входа.";
+        return;
+      }
+      setTokens(data.accessToken, data.refreshToken, data.user.username);
+      setSession(data.user.username);
+      syncHeader();
+      await showCabinet();
+    } finally {
+      if (loginSubmitBtn) {
+        loginSubmitBtn.disabled = false;
+        loginSubmitBtn.setAttribute("aria-busy", "false");
+        loginSubmitBtn.textContent = loginBtnText || "Войти";
+      }
     }
-    setTokens(data.accessToken, data.refreshToken, data.user.username);
-    setSession(data.user.username);
-    syncHeader();
-    await showCabinet();
   });
 
   formRegister.addEventListener("submit", async function (e) {
@@ -844,7 +864,6 @@
   });
 
   if (changeNickBtn) {
-    changeNickBtn.hidden = true;
     changeNickBtn.disabled = true;
     changeNickBtn.setAttribute("aria-disabled", "true");
     changeNickBtn.addEventListener("click", function () {

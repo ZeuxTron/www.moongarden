@@ -23,6 +23,11 @@
         font-family: var(--font-display, "Sora", sans-serif);
         margin: 0 0 8px;
       }
+      .admin-top-actions {
+        display: flex;
+        justify-content: flex-start;
+        margin-bottom: 14px;
+      }
       .admin-news-page .admin-hint {
         color: var(--text-muted, #888);
         font-size: 14px;
@@ -132,6 +137,9 @@
   <body>
     <div class="site-root">
       <div class="admin-news-page">
+        <div class="admin-top-actions">
+          <a class="btn btn--ghost" href="index.html">Назад</a>
+        </div>
         <h1>Панель контента</h1>
         <p class="admin-hint">
           Войдите на основном сайте в аккаунт с правами администратора (<code>ADMIN_USERNAMES</code> или
@@ -235,7 +243,7 @@
                 <input type="hidden" id="server-edit-id" value="" />
                 <label class="admin-field" for="server-image">
                   <span>Картинка (`product-mark product-mark--server`)</span>
-                  <input id="server-image" name="imageUrl" type="url" required placeholder="https://..." />
+                  <input id="server-image" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
                 </label>
                 <label class="admin-field" for="server-title">
                   <span>Название (h1 в `server-card-title-row`)</span>

@@ -123,7 +123,7 @@
   }
   function resetServerForm() {
     serverEditId.value = "";
-    serverImage.value = "";
+    if (serverImage) serverImage.value = "";
     serverTitle.value = "";
     serverTagline.value = "";
     serverMeta1.value = "";
@@ -343,7 +343,7 @@
   }
   function startServerEdit(item) {
     serverEditId.value = item.id;
-    serverImage.value = item.imageUrl || "";
+    if (serverImage) serverImage.value = "";
     serverTitle.value = item.title || "";
     serverTagline.value = item.tagline || "";
     serverMeta1.value = item.meta1 || "";
@@ -490,29 +490,42 @@
   serverForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     setServerFormMsg("");
-    var payload = {
-      imageUrl: serverImage.value.trim(),
-      title: serverTitle.value.trim(),
-      tagline: serverTagline.value
-        .split(/[•,]/)
-        .map(function (x) {
-          return x.trim();
-        })
-        .filter(Boolean)
-        .join(" • "),
-      meta1: serverMeta1.value.trim(),
-      meta2: serverMeta2.value.trim(),
-      meta3: serverMeta3.value.trim(),
-      order: Number(serverOrder.value || 0),
-      isVisible: !!serverVisible.checked,
-    };
     var isEdit = Boolean(serverEditId.value);
+    var fd = new FormData();
+    var tagline = serverTagline.value
+      .split(/[•,]/)
+      .map(function (x) {
+        return x.trim();
+      })
+      .filter(Boolean)
+      .join(" • ");
+    fd.append("title", serverTitle.value.trim());
+    fd.append("tagline", tagline);
+    fd.append("meta1", serverMeta1.value.trim());
+    fd.append("meta2", serverMeta2.value.trim());
+    fd.append("meta3", serverMeta3.value.trim());
+    fd.append("order", String(Number(serverOrder.value || 0)));
+    fd.append("isVisible", serverVisible.checked ? "true" : "false");
+    if (serverImage.files && serverImage.files[0]) {
+      fd.append("image", serverImage.files[0]);
+    } else if (!isEdit) {
+      setServerFormMsg("Добавьте изображение.", true);
+      return;
+    }
+    var url = isEdit
+      ? API_BASE.replace(/\/$/, "") + "/admin/servers/" + encodeURIComponent(serverEditId.value)
+      : API_BASE.replace(/\/$/, "") + "/admin/servers";
     var method = isEdit ? "PUT" : "POST";
-    var path = isEdit
-      ? "/admin/servers/" + encodeURIComponent(serverEditId.value)
-      : "/admin/servers";
     try {
-      await apiJson(method, path, payload);
+      var r = await fetch(url, {
+        method: method,
+        headers: { Authorization: "Bearer " + token() },
+        body: fd,
+      });
+      var data = await r.json().catch(function () {
+        return {};
+      });
+      if (!r.ok) throw new Error(data.error || "Ошибка " + r.status);
       setServerFormMsg("Сохранено.");
       resetServerForm();
       await loadServerList();

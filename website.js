@@ -49,6 +49,95 @@
 })();
 
 (function () {
+  var scroller = document.querySelector("[data-site-scroll-area]");
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav-links a[href^='#']"));
+  if (!navLinks.length) return;
+
+  var map = {};
+  var sections = [];
+  navLinks.forEach(function (link) {
+    var href = link.getAttribute("href");
+    if (!href || href === "#") return;
+    map[href.slice(1)] = link;
+  });
+
+  Object.keys(map).forEach(function (id) {
+    var el = id === "top" ? document.getElementById("top") : document.getElementById(id);
+    if (el) sections.push({ id: id, el: el });
+  });
+  if (!sections.length) return;
+
+  function setActive(id) {
+    navLinks.forEach(function (link) {
+      var active = link.getAttribute("href") === "#" + id;
+      link.classList.toggle("is-active", active);
+      if (active) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  }
+
+  function pickByScroll() {
+    var rootTop = scroller ? scroller.getBoundingClientRect().top : 0;
+    var bestId = "top";
+    var bestTop = Infinity;
+    sections.forEach(function (entry) {
+      if (entry.id === "top") return;
+      var top = entry.el.getBoundingClientRect().top - rootTop;
+      if (top <= 120 && Math.abs(top) < bestTop) {
+        bestTop = Math.abs(top);
+        bestId = entry.id;
+      }
+    });
+    if (bestId === "top") {
+      var scrollTop = scroller ? scroller.scrollTop : window.scrollY || window.pageYOffset || 0;
+      if (scrollTop > 120) {
+        var nearestId = "top";
+        var nearest = Infinity;
+        sections.forEach(function (entry) {
+          if (entry.id === "top") return;
+          var t = Math.abs(entry.el.getBoundingClientRect().top - rootTop);
+          if (t < nearest) {
+            nearest = t;
+            nearestId = entry.id;
+          }
+        });
+        bestId = nearestId;
+      }
+    }
+    setActive(bestId);
+  }
+
+  if ("IntersectionObserver" in window) {
+    var activeId = "top";
+    var io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && entry.target && entry.target.id) {
+            activeId = entry.target.id;
+          }
+        });
+        setActive(activeId || "top");
+      },
+      {
+        root: scroller || null,
+        rootMargin: "-20% 0px -60% 0px",
+        threshold: [0.1, 0.25, 0.5],
+      }
+    );
+    sections.forEach(function (entry) {
+      if (entry.id !== "top") io.observe(entry.el);
+    });
+    if (scroller) scroller.addEventListener("scroll", pickByScroll, { passive: true });
+    else window.addEventListener("scroll", pickByScroll, { passive: true });
+  } else {
+    if (scroller) scroller.addEventListener("scroll", pickByScroll, { passive: true });
+    else window.addEventListener("scroll", pickByScroll, { passive: true });
+  }
+
+  pickByScroll();
+})();
+
+(function () {
   var hero = document.querySelector(".hero");
   var scroller = document.querySelector("[data-site-scroll-area]");
   if (!hero) return;
