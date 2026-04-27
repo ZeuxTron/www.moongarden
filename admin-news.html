@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MoonGarden — Админка контента</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="website.css?v=20260472" />
+    <style>
+      html,
+      body {
+        height: auto !important;
+        min-height: 100%;
+        overflow: auto !important;
+      }
+      .site-root {
+        min-height: 100vh;
+        overflow: visible !important;
+      }
+      .admin-news-page {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+        min-height: 100%;
+      }
+      .admin-news-page h1 {
+        font-family: var(--font-display, "Sora", sans-serif);
+        margin: 0 0 8px;
+      }
+      .admin-news-page .admin-hint {
+        color: var(--text-muted, #888);
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      .admin-news-grid {
+        display: grid;
+        gap: 28px;
+      }
+      @media (min-width: 900px) {
+        .admin-news-grid {
+          grid-template-columns: 1fr 1fr;
+          align-items: start;
+        }
+      }
+      .admin-panel {
+        background: var(--glass, rgba(20, 16, 40, 0.72));
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+        border-radius: 12px;
+        padding: 20px;
+      }
+      .admin-panel h2 {
+        margin: 0 0 16px;
+        font-size: 16px;
+      }
+      .admin-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .admin-field span {
+        font-size: 12px;
+        color: var(--text-muted, #888);
+      }
+      .admin-field input,
+      .admin-field textarea {
+        border-radius: 8px;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+        background: rgba(10, 8, 22, 0.55);
+        color: var(--text, #fff);
+        padding: 8px 10px;
+        font: inherit;
+      }
+      .admin-field textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      .admin-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .admin-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 520px;
+        overflow: auto;
+      }
+      .admin-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .admin-list .meta {
+        font-size: 12px;
+        color: var(--text-muted, #888);
+      }
+      .admin-denied {
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        background: rgba(239, 68, 68, 0.08);
+      }
+      .admin-msg {
+        margin-top: 12px;
+        font-size: 14px;
+      }
+      .admin-mode-switch {
+        display: inline-flex;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+        background: rgba(0, 0, 0, 0.18);
+      }
+      .admin-mode-switch .btn.is-active {
+        border-color: rgba(147, 197, 253, 0.45);
+        background: rgba(59, 130, 246, 0.2);
+      }
+      .admin-mode-panel[hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="site-root">
+      <div class="admin-news-page">
+        <h1>Новости</h1>
+        <p class="admin-hint">
+          Войдите на основном сайте в аккаунт с правами администратора (<code>ADMIN_USERNAMES</code> или
+          <code>isAdmin</code> в Mongo).
+        </p>
+        <div id="admin-denied" class="admin-denied" hidden>
+          <strong>Нет доступа.</strong> Нужна авторизация и флаг администратора.
+          <p><a href="index.html">На главную</a></p>
+        </div>
+        <div id="admin-app" class="admin-news-grid" hidden>
+          <div style="grid-column: 1 / -1">
+            <div class="admin-mode-switch" role="tablist" aria-label="Режим админки">
+              <button type="button" class="btn btn--ghost is-active" data-admin-mode-btn="news">Новости</button>
+              <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
+            </div>
+          </div>
+
+          <div id="admin-mode-news" class="admin-mode-panel admin-news-grid">
+            <div class="admin-panel">
+              <h2 id="form-title">Новая новость</h2>
+              <form id="news-form">
+                <input type="hidden" id="edit-slug" value="" />
+                <label class="admin-field" for="f-title">
+                  <span>Заголовок</span>
+                  <input id="f-title" name="title" type="text" required />
+                </label>
+                <label class="admin-field" for="f-slug">
+                  <span>Slug (латиница, дефисы; пусто = авто)</span>
+                  <input id="f-slug" name="slug" type="text" placeholder="news-my-title" />
+                </label>
+                <label class="admin-field" for="f-excerpt">
+                  <span>Краткое описание (лид)</span>
+                  <textarea id="f-excerpt" name="excerpt" required></textarea>
+                </label>
+                <label class="admin-field" for="f-body">
+                  <span>Текст (абзацы через пустую строку)</span>
+                  <textarea id="f-body" name="body" required rows="8"></textarea>
+                </label>
+                <label class="admin-field" for="f-date">
+                  <span>Дата публикации</span>
+                  <input id="f-date" name="publishedAt" type="datetime-local" />
+                </label>
+                <label class="admin-field" for="f-image">
+                  <span>Картинка (PNG / JPEG / WebP; при редактировании можно не менять)</span>
+                  <input id="f-image" name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+                </label>
+                <div class="admin-actions">
+                  <button type="submit" class="btn btn--primary" id="btn-save">Сохранить</button>
+                  <button type="button" class="btn btn--ghost" id="btn-reset">Сбросить форму</button>
+                </div>
+                <p class="admin-msg" id="form-msg" role="status"></p>
+              </form>
+            </div>
+            <div class="admin-panel">
+              <h2>Опубликованные</h2>
+              <ul class="admin-list" id="news-list"></ul>
+              <p class="admin-msg" id="list-msg" role="status"></p>
+            </div>
+          </div>
+
+          <div id="admin-mode-screenshots" class="admin-mode-panel admin-news-grid" hidden>
+            <div class="admin-panel">
+              <h2 id="shot-form-title">Новый скриншот</h2>
+              <form id="shot-form">
+                <input type="hidden" id="shot-edit-id" value="" />
+                <label class="admin-field" for="shot-title">
+                  <span>Название</span>
+                  <input id="shot-title" name="title" type="text" required />
+                </label>
+                <label class="admin-field" for="shot-url">
+                  <span>URL изображения (Google Drive прямой или любой https)</span>
+                  <input id="shot-url" name="imageUrl" type="url" required placeholder="https://..." />
+                </label>
+                <label class="admin-field" for="shot-order">
+                  <span>Порядок (меньше = выше)</span>
+                  <input id="shot-order" name="order" type="number" value="0" />
+                </label>
+                <label class="admin-field" for="shot-visible">
+                  <span>Видимость</span>
+                  <input id="shot-visible" name="isVisible" type="checkbox" checked />
+                </label>
+                <div class="admin-actions">
+                  <button type="submit" class="btn btn--primary">Сохранить</button>
+                  <button type="button" class="btn btn--ghost" id="shot-reset">Сбросить форму</button>
+                </div>
+                <p class="admin-msg" id="shot-form-msg" role="status"></p>
+              </form>
+            </div>
+            <div class="admin-panel">
+              <h2>Скриншоты в галерее</h2>
+              <ul class="admin-list" id="shot-list"></ul>
+              <p class="admin-msg" id="shot-list-msg" role="status"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="api-config.js?v=2"></script>
+    <script src="admin-news.js?v=2"></script>
+  </body>
+</html>
