@@ -90,7 +90,7 @@
     root.innerHTML =
       '<div class="news-coldstart-box">' +
       '<p class="news-fetch-status news-fetch-status--wakeup">Сервер просыпается, подождите немного…</p>' +
-      '<p class="news-fetch-substatus">Обычно это занимает до минуты на бесплатном хостинге. Прошло: ' +
+      '<p class="news-fetch-substatus">Обычно это занимает до минуты. Прошло: ' +
       escapeHtml(String(elapsedSec)) +
       " сек.</p>" +
       "</div>";
@@ -231,7 +231,7 @@
     } catch (err) {
       renderFallbackText(
         "Сервер просыпается, подождите немного…",
-        "Обычно это занимает до минуты на бесплатном хостинге. Обновите страницу чуть позже."
+        "Обычно это занимает до минуты. Обновите страницу чуть позже."
       );
     }
   }

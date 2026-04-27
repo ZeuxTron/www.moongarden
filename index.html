@@ -220,8 +220,8 @@
                     <dt>Соцсети</dt>
                     <dd>
                       <nav class="site-footer-links-row" aria-label="Соцсети">
-                        <a href="#">Discord</a>
-                        <a href="#">Telegram</a>
+                        <a href="https://discord.gg/KBq7bfmNY" target="_blank" rel="noopener noreferrer">Discord</a>
+                        <a href="https://t.me/+PspLS96qtTZmNGJi" target="_blank" rel="noopener noreferrer">Telegram</a>
                       </nav>
                     </dd>
                   </div>
@@ -229,8 +229,8 @@
                     <dt>Документы</dt>
                     <dd>
                       <nav class="site-footer-links-row" aria-label="Документы">
-                        <a href="#">Правила</a>
-                        <a href="#">Конфиденциальность</a>
+                        <button type="button" class="account-link" data-doc-open="rules">Правила</button>
+                        <button type="button" class="account-link" data-doc-open="privacy">Конфиденциальность</button>
                       </nav>
                     </dd>
                   </div>
@@ -528,6 +528,21 @@
 
     <div class="site-toast" id="site-toast" hidden>
       <div class="site-toast__body" id="site-toast-body"></div>
+    </div>
+
+    <div class="site-modal" id="docs-modal" hidden aria-hidden="true" role="presentation">
+      <div class="site-modal__backdrop" data-doc-close tabindex="-1" aria-hidden="true"></div>
+      <div class="site-modal__panel docs-modal__panel" role="dialog" aria-modal="true" aria-labelledby="docs-modal-title" tabindex="-1">
+        <div class="site-modal__head">
+          <h2 class="site-modal__title" id="docs-modal-title">Документ</h2>
+          <button type="button" class="site-modal__x" data-doc-close aria-label="Закрыть окно">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="docs-modal__content" id="docs-modal-content"></div>
+      </div>
     </div>
 
     <script src="https://unpkg.com/skinview3d@3.2.0/bundles/skinview3d.bundle.js"></script>

@@ -2,9 +2,12 @@
   var header = document.querySelector(".site-header");
   var scroller = document.querySelector("[data-site-scroll-area]");
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var mobileMq = window.matchMedia("(max-width: 560px), (pointer: coarse)");
 
   function headerScrollPad() {
-    return header ? 12 : 12;
+    if (!header) return 12;
+    if (mobileMq.matches) return 18;
+    return 12;
   }
 
   document.addEventListener(
@@ -51,6 +54,7 @@
 (function () {
   var scroller = document.querySelector("[data-site-scroll-area]");
   var navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav-links a[href^='#']"));
+  var mobileMq = window.matchMedia("(max-width: 560px), (pointer: coarse)");
   if (!navLinks.length) return;
 
   var map = {};
@@ -66,6 +70,16 @@
     if (el) sections.push({ id: id, el: el });
   });
   if (!sections.length) return;
+  var infoEntry = null;
+  var newsEntry = null;
+  for (var si = 0; si < sections.length; si++) {
+    if (sections[si].id === "info") {
+      infoEntry = sections[si];
+    }
+    if (sections[si].id === "news") {
+      newsEntry = sections[si];
+    }
+  }
 
   function setActive(id) {
     navLinks.forEach(function (link) {
@@ -78,36 +92,74 @@
 
   function pickByScroll() {
     var rootTop = scroller ? scroller.getBoundingClientRect().top : 0;
+    var rootHeight = scroller ? scroller.clientHeight : window.innerHeight || 0;
     var bestId = "top";
-    var bestTop = Infinity;
+    var activationLine = mobileMq.matches ? 170 : 120;
+    var focusLine = rootHeight * (mobileMq.matches ? 0.42 : 0.35);
+
+    if (infoEntry && infoEntry.el) {
+      var infoRect = infoEntry.el.getBoundingClientRect();
+      var infoTop = infoRect.top - rootTop;
+      var infoBottom = infoRect.bottom - rootTop;
+      var infoVisible = infoTop < rootHeight * 0.65 && infoBottom > rootHeight * 0.2;
+      var atEnd = false;
+      if (scroller) {
+        atEnd = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4;
+      } else {
+        var pageHeight = document.documentElement.scrollHeight || document.body.scrollHeight || 0;
+        var scrollY = window.scrollY || window.pageYOffset || 0;
+        atEnd = scrollY + (window.innerHeight || 0) >= pageHeight - 4;
+      }
+      if (atEnd || infoVisible) {
+        setActive("info");
+        return;
+      }
+    }
+
+    if (newsEntry && newsEntry.el) {
+      var newsRect = newsEntry.el.getBoundingClientRect();
+      var newsBottom = newsRect.bottom - rootTop;
+      if (newsBottom < focusLine) {
+        setActive("info");
+        return;
+      }
+    }
+
+    var passedByFocus = "top";
+    sections.forEach(function (entry) {
+      if (entry.id === "top" || entry.id === "info") return;
+      var rectFocus = entry.el.getBoundingClientRect();
+      var topFocus = rectFocus.top - rootTop;
+      if (topFocus <= focusLine) passedByFocus = entry.id;
+    });
+    if (passedByFocus !== "top") {
+      setActive(passedByFocus);
+      return;
+    }
+
+    var bestOverlap = 0;
+    var lastPassedId = "top";
     sections.forEach(function (entry) {
       if (entry.id === "top") return;
-      var top = entry.el.getBoundingClientRect().top - rootTop;
-      if (top <= 120 && Math.abs(top) < bestTop) {
-        bestTop = Math.abs(top);
+      var rect = entry.el.getBoundingClientRect();
+      var top = rect.top - rootTop;
+      var bottom = rect.bottom - rootTop;
+      var overlap = Math.max(0, Math.min(bottom, rootHeight) - Math.max(top, 0));
+      if (overlap > bestOverlap) {
+        bestOverlap = overlap;
         bestId = entry.id;
       }
-    });
-    if (bestId === "top") {
-      var scrollTop = scroller ? scroller.scrollTop : window.scrollY || window.pageYOffset || 0;
-      if (scrollTop > 120) {
-        var nearestId = "top";
-        var nearest = Infinity;
-        sections.forEach(function (entry) {
-          if (entry.id === "top") return;
-          var t = Math.abs(entry.el.getBoundingClientRect().top - rootTop);
-          if (t < nearest) {
-            nearest = t;
-            nearestId = entry.id;
-          }
-        });
-        bestId = nearestId;
+      if (top <= activationLine) {
+        lastPassedId = entry.id;
       }
+    });
+    if (bestOverlap < 24 && lastPassedId !== "top") {
+      bestId = lastPassedId;
     }
     setActive(bestId);
   }
 
-  if ("IntersectionObserver" in window) {
+  if ("IntersectionObserver" in window && !mobileMq.matches) {
     var activeId = "top";
     var io = new IntersectionObserver(
       function (entries) {
@@ -127,11 +179,29 @@
     sections.forEach(function (entry) {
       if (entry.id !== "top") io.observe(entry.el);
     });
-    if (scroller) scroller.addEventListener("scroll", pickByScroll, { passive: true });
-    else window.addEventListener("scroll", pickByScroll, { passive: true });
+    var ticking = false;
+    var onScroll = function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        pickByScroll();
+      });
+    };
+    if (scroller) scroller.addEventListener("scroll", onScroll, { passive: true });
+    else window.addEventListener("scroll", onScroll, { passive: true });
   } else {
-    if (scroller) scroller.addEventListener("scroll", pickByScroll, { passive: true });
-    else window.addEventListener("scroll", pickByScroll, { passive: true });
+    var tickingFallback = false;
+    var onScrollFallback = function () {
+      if (tickingFallback) return;
+      tickingFallback = true;
+      requestAnimationFrame(function () {
+        tickingFallback = false;
+        pickByScroll();
+      });
+    };
+    if (scroller) scroller.addEventListener("scroll", onScrollFallback, { passive: true });
+    else window.addEventListener("scroll", onScrollFallback, { passive: true });
   }
 
   pickByScroll();
@@ -418,4 +488,66 @@ window.initNewsSlider = function (newsSection) {
     });
   }
   applyLauncherDownloadUrl();
+})();
+
+(function () {
+  var docsModal = document.getElementById("docs-modal");
+  var docsModalTitle = document.getElementById("docs-modal-title");
+  var docsModalContent = document.getElementById("docs-modal-content");
+  var openers = document.querySelectorAll("[data-doc-open]");
+  if (!docsModal || !docsModalTitle || !docsModalContent || !openers.length) return;
+
+  var docs = {
+    rules: {
+      title: "Правила проекта",
+      html:
+        "<h3>Общие положения</h3>" +
+        "<p>Уважайте других игроков и администрацию, не используйте оскорбления, дискриминацию и провокации в чате или личных сообщениях.</p>" +
+        "<h3>Игровой процесс</h3>" +
+        "<ul><li>Запрещены читы, дюпы, макросы и любой софт, дающий нечестное преимущество.</li><li>Запрещён гриферство, кража и умышленная порча чужих построек без согласия владельца.</li><li>Эксплуатация багов допускается только после сообщения администрации и до фикса запрещена.</li></ul>" +
+        "<h3>Модерация</h3>" +
+        "<p>За нарушение правил применяются предупреждения, муты, временные блокировки и бан. Администрация оставляет право пересмотра санкций в зависимости от ситуации.</p>",
+    },
+    privacy: {
+      title: "Политика конфиденциальности",
+      html:
+        "<h3>Какие данные мы обрабатываем</h3>" +
+        "<p>Для работы аккаунта мы храним технические данные профиля: логин, дату регистрации, служебные токены авторизации и настройки, необходимые для работы сервиса.</p>" +
+        "<h3>Цели обработки</h3>" +
+        "<p>Данные используются только для аутентификации, поддержки функций сайта/лаунчера, безопасности и предотвращения злоупотреблений.</p>" +
+        "<h3>Передача и защита</h3>" +
+        "<p>Мы не продаём персональные данные третьим лицам. Доступ к служебным данным ограничен, применяются стандартные меры защиты инфраструктуры и логирования.</p>" +
+        "<h3>Обратная связь</h3>" +
+        "<p>По вопросам удаления или уточнения данных обращайтесь в официальные каналы проекта (Discord/Telegram), указанные в футере сайта.</p>",
+    },
+  };
+
+  function openDoc(kind) {
+    var doc = docs[kind];
+    if (!doc) return;
+    docsModalTitle.textContent = doc.title;
+    docsModalContent.innerHTML = doc.html;
+    docsModal.hidden = false;
+    docsModal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeDoc() {
+    docsModal.hidden = true;
+    docsModal.setAttribute("aria-hidden", "true");
+  }
+
+  openers.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      openDoc(btn.getAttribute("data-doc-open"));
+    });
+  });
+
+  docsModal.addEventListener("click", function (e) {
+    var closeBtn = e.target && e.target.closest && e.target.closest("[data-doc-close]");
+    if (closeBtn) closeDoc();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !docsModal.hidden) closeDoc();
+  });
 })();
