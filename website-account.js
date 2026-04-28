@@ -966,7 +966,21 @@
     syncHeader();
   }
 
+  function applyAccountDeepLinkFromHash() {
+    var raw = (window.location.hash || "").replace(/^#/, "");
+    if (!raw) return;
+    var h = raw.split(/[?&]/)[0].toLowerCase();
+    if (h !== "cabinet" && h !== "lk") return;
+    openModal("cabinet", document.body);
+    try {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    } catch (e) {}
+  }
+
+  window.addEventListener("hashchange", applyAccountDeepLinkFromHash);
+
   // Show consistent header label from stored session immediately, then refine after refresh/me.
   syncHeader();
   bootstrapSession();
+  applyAccountDeepLinkFromHash();
 })();

@@ -10,6 +10,7 @@
   var newsModePanel = document.getElementById("admin-mode-news");
   var shotModePanel = document.getElementById("admin-mode-screenshots");
   var serverModePanel = document.getElementById("admin-mode-servers");
+  var launcherModePanel = document.getElementById("admin-mode-launcher");
 
   var form = document.getElementById("news-form");
   var formTitle = document.getElementById("form-title");
@@ -20,6 +21,9 @@
   var fBody = document.getElementById("f-body");
   var fDate = document.getElementById("f-date");
   var fHeroLayout = document.getElementById("f-hero-layout");
+  var fHeroLayoutTrigger = document.getElementById("f-hero-layout-trigger");
+  var fHeroLayoutMenu = document.getElementById("f-hero-layout-menu");
+  var fHeroLayoutLabel = document.getElementById("f-hero-layout-label");
   var fImage = document.getElementById("f-image");
   var fImageId = document.getElementById("f-image-id");
   var fImagePreview = document.getElementById("f-image-preview");
@@ -58,6 +62,26 @@
   var serverListMsg = document.getElementById("server-list-msg");
   var serverResetBtn = document.getElementById("server-reset");
 
+  var launcherForm = document.getElementById("launcher-release-form");
+  var launcherVersion = document.getElementById("launcher-version");
+  var launcherSeverity = document.getElementById("launcher-severity");
+  var launcherCustomUrl = document.getElementById("launcher-custom-url");
+  var launcherDownloadUrl = document.getElementById("launcher-download-url");
+  var launcherManifestUrl = document.getElementById("launcher-manifest-url");
+  var launcherManifestMirrors = document.getElementById("launcher-manifest-mirrors");
+  var launcherSyncStrict = document.getElementById("launcher-sync-strict");
+  var launcherReleaseMsg = document.getElementById("launcher-release-msg");
+
+  var lmBroadcastForm = document.getElementById("lm-broadcast-form");
+  var lmBroadcastMsg = document.getElementById("lm-broadcast-msg");
+  var lmBroadcastRead = document.getElementById("lm-broadcast-read");
+  var lmBroadcastUnread = document.getElementById("lm-broadcast-unread");
+  var lmBroadcastReceiptsBtn = document.getElementById("lm-broadcast-receipts-btn");
+  var lmPersonalForm = document.getElementById("lm-personal-form");
+  var lmPersonalMsg = document.getElementById("lm-personal-msg");
+  var lmPersonalReceiptsBtn = document.getElementById("lm-personal-receipts-btn");
+  var lmPersonalReceiptsOut = document.getElementById("lm-personal-receipts-out");
+
   var mediaRoot = document.getElementById("admin-media-root");
   var mediaPark = document.getElementById("admin-media-park");
   var hostNews = document.getElementById("admin-media-host-news");
@@ -77,12 +101,38 @@
   var previewExcerpt = document.querySelector("[data-news-preview-excerpt]");
   var previewText = document.querySelector("[data-news-preview-text]");
 
-  if (!form || !app || !denied || !shotForm || !serverForm) return;
+  if (!form || !app || !denied || !shotForm || !serverForm || !launcherForm) return;
 
   var mediaItems = [];
   var newsCache = [];
   var previewIndex = 0;
   var bodyPreviewTimer = null;
+
+  var HERO_LAYOUT_LABELS = {
+    tl: "Слева сверху у текста",
+    lc: "Слева, ниже (по центру колонки)",
+    br: "Справа снизу",
+  };
+
+  function closeHeroLayoutMenu() {
+    if (fHeroLayoutMenu) fHeroLayoutMenu.classList.remove("is-open");
+    if (fHeroLayoutTrigger) fHeroLayoutTrigger.setAttribute("aria-expanded", "false");
+  }
+
+  function setHeroLayoutValue(raw) {
+    if (!fHeroLayout) return;
+    var k = String(raw || "").toLowerCase();
+    if (k !== "lc" && k !== "br") k = "tl";
+    fHeroLayout.value = k;
+    if (fHeroLayoutLabel) fHeroLayoutLabel.textContent = HERO_LAYOUT_LABELS[k] || HERO_LAYOUT_LABELS.tl;
+    var opts = document.querySelectorAll("[data-hero-layout]");
+    for (var oi = 0; oi < opts.length; oi++) {
+      var btn = opts[oi];
+      var v = btn.getAttribute("data-hero-layout");
+      btn.classList.toggle("is-selected", v === k);
+    }
+    if (previewIndex === 0) renderNewsPreview();
+  }
 
   function token() {
     try {
@@ -279,7 +329,7 @@
     fExcerpt.value = "";
     fBody.value = "";
     fDate.value = "";
-    if (fHeroLayout) fHeroLayout.value = "tl";
+    setHeroLayoutValue("tl");
     fImageId.value = "";
     fImage.value = "";
     if (fImagePreview) {
@@ -583,10 +633,7 @@
     } catch (e) {}
     fImage.value = "";
     fImageId.value = item.imageId || "";
-    if (fHeroLayout) {
-      var hl = String(item.heroLayout || "").toLowerCase();
-      fHeroLayout.value = hl === "lc" || hl === "br" ? hl : "tl";
-    }
+    setHeroLayoutValue(item.heroLayout);
     setPreview(fImagePreview, item.imageUrl || "");
     formTitle.textContent = "Редактирование: " + item.slug;
     setFormMsg("");
@@ -751,6 +798,138 @@
     }
   }
 
+  function setLauncherMsg(text, isError) {
+    if (!launcherReleaseMsg) return;
+    launcherReleaseMsg.textContent = text || "";
+    launcherReleaseMsg.style.color = isError ? "#f87171" : "";
+  }
+
+  function syncLauncherUrlField() {
+    if (!launcherDownloadUrl || !launcherCustomUrl) return;
+    var on = launcherCustomUrl.checked;
+    launcherDownloadUrl.disabled = !on;
+    launcherDownloadUrl.required = on;
+  }
+
+  function setLmBroadcastMsg(text, isError) {
+    if (!lmBroadcastMsg) return;
+    lmBroadcastMsg.textContent = text || "";
+    lmBroadcastMsg.style.color = isError ? "#f87171" : "";
+  }
+  function setLmPersonalMsg(text, isError) {
+    if (!lmPersonalMsg) return;
+    lmPersonalMsg.textContent = text || "";
+    lmPersonalMsg.style.color = isError ? "#f87171" : "";
+  }
+
+  function renderLmUserList(ul, rows) {
+    if (!ul) return;
+    ul.innerHTML = "";
+    if (!rows || !rows.length) {
+      var li = document.createElement("li");
+      li.textContent = "—";
+      ul.appendChild(li);
+      return;
+    }
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var item = document.createElement("li");
+      var name = r.usernameDisplay || r.username || "?";
+      var extra = r.readAt ? " · " + new Date(r.readAt).toLocaleString() : "";
+      item.textContent = name + extra;
+      ul.appendChild(item);
+    }
+  }
+
+  async function refreshLmBroadcastReceipts() {
+    if (!lmBroadcastRead || !lmBroadcastUnread) return;
+    try {
+      var d = await apiJson("GET", "/admin/launcher-messages/broadcast/receipts");
+      renderLmUserList(lmBroadcastRead, d.read || []);
+      renderLmUserList(lmBroadcastUnread, d.unread || []);
+    } catch (e) {
+      renderLmUserList(lmBroadcastRead, []);
+      renderLmUserList(lmBroadcastUnread, []);
+      setLmBroadcastMsg(e.message || String(e), true);
+    }
+  }
+
+  async function loadLauncherMessagesAdmin() {
+    if (!lmBroadcastForm) return;
+    setLmBroadcastMsg("");
+    setLmPersonalMsg("");
+    try {
+      var data = await apiJson("GET", "/admin/launcher-messages");
+      var b = data.broadcast;
+      var elTitle = document.getElementById("lm-b-title");
+      var elBody = document.getElementById("lm-b-body");
+      var elCv = document.getElementById("lm-b-cancel-visible");
+      var elCl = document.getElementById("lm-b-cancel-label");
+      var elPl = document.getElementById("lm-b-primary-label");
+      var elPm = document.getElementById("lm-b-primary-mode");
+      var elPu = document.getElementById("lm-b-primary-url");
+      if (b) {
+        if (elTitle) elTitle.value = b.title || "";
+        if (elBody) elBody.value = b.body || "";
+        if (elCv) elCv.checked = b.cancelVisible !== false;
+        if (elCl) elCl.value = b.cancelLabel || "Отмена";
+        if (elPl) elPl.value = b.primaryLabel || "Ок";
+        if (elPm) elPm.value = b.primaryMode === "open_url" ? "open_url" : "dismiss";
+        if (elPu) elPu.value = b.primaryUrl || "";
+      } else {
+        if (elTitle) elTitle.value = "";
+        if (elBody) elBody.value = "";
+        if (elCv) elCv.checked = true;
+        if (elCl) elCl.value = "Отмена";
+        if (elPl) elPl.value = "Ок";
+        if (elPm) elPm.value = "dismiss";
+        if (elPu) elPu.value = "";
+      }
+      await refreshLmBroadcastReceipts();
+    } catch (e) {
+      setLmBroadcastMsg(e.message || String(e), true);
+    }
+  }
+
+  async function loadLauncherRelease() {
+    setLauncherMsg("");
+    try {
+      var data = await apiJson("GET", "/admin/launcher-release");
+      if (launcherVersion) {
+        launcherVersion.value =
+          data.releaseConfigured && data.latestVersion != null
+            ? String(data.latestVersion)
+            : "";
+      }
+      if (launcherSeverity) {
+        launcherSeverity.value = data.updateSeverity === "critical" ? "critical" : "simple";
+      }
+      if (launcherCustomUrl) launcherCustomUrl.checked = !!data.useCustomLauncherDownloadUrl;
+      if (launcherDownloadUrl) {
+        launcherDownloadUrl.value = data.launcherDownloadUrl ? String(data.launcherDownloadUrl) : "";
+      }
+      if (launcherManifestUrl) {
+        launcherManifestUrl.value = data.manifestUrl ? String(data.manifestUrl) : "";
+      }
+      if (launcherManifestMirrors) {
+        var mirrors = data.manifestMirrors;
+        if (Array.isArray(mirrors) && mirrors.length) {
+          launcherManifestMirrors.value = mirrors.map(function (m) {
+            return String(m || "").trim();
+          }).filter(Boolean).join("\n");
+        } else {
+          launcherManifestMirrors.value = "";
+        }
+      }
+      if (launcherSyncStrict) {
+        launcherSyncStrict.checked = String(data.syncMode || "").toLowerCase() === "strict";
+      }
+      syncLauncherUrlField();
+    } catch (e) {
+      setLauncherMsg(e.message || String(e), true);
+    }
+  }
+
   async function deleteServer(id) {
     if (!confirm("Удалить карточку сервера?")) return;
     try {
@@ -766,9 +945,11 @@
     var isNews = mode === "news";
     var isScreenshots = mode === "screenshots";
     var isServers = mode === "servers";
+    var isLauncher = mode === "launcher";
     if (newsModePanel) newsModePanel.hidden = !isNews;
     if (shotModePanel) shotModePanel.hidden = !isScreenshots;
     if (serverModePanel) serverModePanel.hidden = !isServers;
+    if (launcherModePanel) launcherModePanel.hidden = !isLauncher;
     if (isNews) placeMediaHost("news");
     else if (isScreenshots) placeMediaHost("screenshots");
     else placeMediaHost("servers");
@@ -782,6 +963,10 @@
       });
     } else {
       renderMediaTiles();
+    }
+    if (isLauncher) {
+      void loadLauncherRelease();
+      void loadLauncherMessagesAdmin();
     }
   }
 
@@ -891,10 +1076,32 @@
   if (fBody) {
     fBody.addEventListener("input", scheduleBodyPreview);
   }
-  if (fHeroLayout) {
-    fHeroLayout.addEventListener("change", function () {
-      if (previewIndex === 0) renderNewsPreview();
+  if (fHeroLayoutTrigger && fHeroLayoutMenu) {
+    fHeroLayoutTrigger.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var open = fHeroLayoutMenu.classList.toggle("is-open");
+      fHeroLayoutTrigger.setAttribute("aria-expanded", open ? "true" : "false");
     });
+    document.addEventListener("click", function (e) {
+      if (
+        fHeroLayoutMenu.classList.contains("is-open") &&
+        !fHeroLayoutMenu.contains(e.target) &&
+        !fHeroLayoutTrigger.contains(e.target)
+      ) {
+        closeHeroLayoutMenu();
+      }
+    });
+    var heroOptBtns = document.querySelectorAll("[data-hero-layout]");
+    for (var hi = 0; hi < heroOptBtns.length; hi++) {
+      (function (btn) {
+        btn.addEventListener("click", function () {
+          var v = btn.getAttribute("data-hero-layout");
+          setHeroLayoutValue(v);
+          closeHeroLayoutMenu();
+        });
+      })(heroOptBtns[hi]);
+    }
   }
   if (fImage) {
     fImage.addEventListener("input", function () {
@@ -939,6 +1146,111 @@
       } catch (err) {
         mediaMsg.textContent = err.message || String(err);
         mediaMsg.style.color = "#f87171";
+      }
+    });
+  }
+
+  if (launcherCustomUrl) {
+    launcherCustomUrl.addEventListener("change", syncLauncherUrlField);
+  }
+  launcherForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    setLauncherMsg("");
+    try {
+      var mirrorsLines = launcherManifestMirrors
+        ? String(launcherManifestMirrors.value || "")
+            .split(/\r?\n/)
+            .map(function (s) {
+              return s.trim();
+            })
+            .filter(Boolean)
+        : [];
+      await apiJson("PUT", "/admin/launcher-release", {
+        latestVersion: launcherVersion ? launcherVersion.value.trim() : "",
+        updateSeverity: launcherSeverity ? launcherSeverity.value : "simple",
+        useCustomLauncherDownloadUrl: !!(launcherCustomUrl && launcherCustomUrl.checked),
+        launcherDownloadUrl: launcherDownloadUrl ? launcherDownloadUrl.value.trim() : "",
+        manifestUrl: launcherManifestUrl ? launcherManifestUrl.value.trim() : "",
+        manifestMirrors: mirrorsLines,
+        syncMode: launcherSyncStrict && launcherSyncStrict.checked ? "strict" : "soft",
+      });
+      setLauncherMsg("Сохранено.");
+      await loadLauncherRelease();
+    } catch (err) {
+      setLauncherMsg(err.message || String(err), true);
+    }
+  });
+
+  if (lmBroadcastForm) {
+    lmBroadcastForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      setLmBroadcastMsg("");
+      try {
+        var elCv = document.getElementById("lm-b-cancel-visible");
+        await apiJson("PUT", "/admin/launcher-messages/broadcast", {
+          title: (document.getElementById("lm-b-title") || {}).value || "",
+          body: (document.getElementById("lm-b-body") || {}).value || "",
+          cancelVisible: !!(elCv && elCv.checked),
+          cancelLabel: (document.getElementById("lm-b-cancel-label") || {}).value || "Отмена",
+          primaryLabel: (document.getElementById("lm-b-primary-label") || {}).value || "Ок",
+          primaryMode: (document.getElementById("lm-b-primary-mode") || {}).value || "dismiss",
+          primaryUrl: (document.getElementById("lm-b-primary-url") || {}).value || "",
+        });
+        setLmBroadcastMsg("Сохранено. Ревизия увеличена — лаунчеры покажут сообщение заново непрочитавшим.");
+        await loadLauncherMessagesAdmin();
+      } catch (err) {
+        setLmBroadcastMsg(err.message || String(err), true);
+      }
+    });
+  }
+  if (lmBroadcastReceiptsBtn) {
+    lmBroadcastReceiptsBtn.addEventListener("click", function () {
+      void refreshLmBroadcastReceipts();
+    });
+  }
+  if (lmPersonalForm) {
+    lmPersonalForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      setLmPersonalMsg("");
+      var nick = ((document.getElementById("lm-p-username") || {}).value || "").trim().toLowerCase();
+      if (!nick) {
+        setLmPersonalMsg("Укажите ник.", true);
+        return;
+      }
+      try {
+        var elPCv = document.getElementById("lm-p-cancel-visible");
+        await apiJson("PUT", "/admin/launcher-messages/personal/" + encodeURIComponent(nick), {
+          title: (document.getElementById("lm-p-title") || {}).value || "",
+          body: (document.getElementById("lm-p-body") || {}).value || "",
+          cancelVisible: !!(elPCv && elPCv.checked),
+          cancelLabel: (document.getElementById("lm-p-cancel-label") || {}).value || "Отмена",
+          primaryLabel: (document.getElementById("lm-p-primary-label") || {}).value || "Ок",
+          primaryMode: (document.getElementById("lm-p-primary-mode") || {}).value || "dismiss",
+          primaryUrl: (document.getElementById("lm-p-primary-url") || {}).value || "",
+        });
+        setLmPersonalMsg("Сохранено для «" + nick + "».");
+      } catch (err) {
+        setLmPersonalMsg(err.message || String(err), true);
+      }
+    });
+  }
+  if (lmPersonalReceiptsBtn) {
+    lmPersonalReceiptsBtn.addEventListener("click", async function () {
+      setLmPersonalMsg("");
+      var nick = ((document.getElementById("lm-p-username") || {}).value || "").trim().toLowerCase();
+      if (!nick) {
+        setLmPersonalMsg("Укажите ник.", true);
+        return;
+      }
+      try {
+        var d = await apiJson("GET", "/admin/launcher-messages/personal/" + encodeURIComponent(nick) + "/receipts");
+        if (lmPersonalReceiptsOut) {
+          lmPersonalReceiptsOut.hidden = false;
+          lmPersonalReceiptsOut.textContent = JSON.stringify(d, null, 2);
+        }
+      } catch (err) {
+        setLmPersonalMsg(err.message || String(err), true);
+        if (lmPersonalReceiptsOut) lmPersonalReceiptsOut.hidden = true;
       }
     });
   }
@@ -1011,5 +1323,6 @@
     await loadShotList();
     await loadServerList();
     await loadMediaList();
+    syncLauncherUrlField();
   })();
 })();

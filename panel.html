@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="website.css?v=20260481" />
+    <link rel="stylesheet" href="website.css?v=20260486" />
     <style>
       .site-root {
         height: 100vh;
@@ -37,8 +37,6 @@
       }
       .admin-top-actions .admin-mode-switch {
         margin-bottom: 0;
-        flex: 1;
-        min-width: 0;
       }
       .admin-panel-close {
         flex-shrink: 0;
@@ -58,6 +56,28 @@
         color: var(--text-muted, #888);
         font-size: 14px;
         margin-bottom: 24px;
+      }
+      .admin-subh {
+        margin: 16px 0 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-muted, #888);
+      }
+      .admin-lm-list {
+        margin: 0 0 12px;
+        padding-left: 1.1rem;
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 13px;
+      }
+      .admin-lm-json {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.2);
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
       #admin-app {
         display: block;
@@ -113,8 +133,7 @@
         color: var(--text-muted, #888);
       }
       .admin-field input,
-      .admin-field textarea,
-      .admin-field select {
+      .admin-field textarea {
         border-radius: 8px;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
         background: rgba(10, 8, 22, 0.55);
@@ -122,9 +141,20 @@
         padding: 8px 10px;
         font: inherit;
       }
-      .admin-field select {
-        cursor: pointer;
-        max-width: 100%;
+      .admin-news-page .admin-hero-layout-picker.cabinet-model-picker {
+        width: 100%;
+        position: relative;
+      }
+      .admin-news-page .admin-hero-layout-picker .cabinet-model-picker__trigger {
+        width: 100%;
+        min-width: 0;
+      }
+      .admin-news-page .admin-hero-layout-picker .cabinet-model-picker__trigger span:first-child {
+        min-width: 0;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .admin-field textarea {
         min-height: 120px;
@@ -235,7 +265,9 @@
       .admin-media-tile {
         flex: 0 0 auto;
         scroll-snap-align: start;
-        width: 140px;
+        width: 152px;
+        max-width: 100%;
+        box-sizing: border-box;
         border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
         border-radius: 10px;
         padding: 8px;
@@ -243,6 +275,7 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
+        overflow: hidden;
       }
       .admin-media-tile.is-selected {
         border-color: rgba(147, 197, 253, 0.65);
@@ -267,16 +300,20 @@
       .admin-media-tile-actions {
         margin-top: auto;
         padding-top: 8px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 6px;
         width: 100%;
+        min-width: 0;
       }
       .admin-media-tile-actions .btn {
         width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
         justify-content: center;
-        padding: 6px 6px;
-        font-size: 12px;
+        padding: 6px 8px;
+        font-size: 11px;
+        line-height: 1.2;
       }
       .admin-news-preview {
         border-radius: 10px;
@@ -413,6 +450,7 @@
             <button type="button" class="btn btn--ghost is-active" data-admin-mode-btn="news">Новости</button>
             <button type="button" class="btn btn--ghost" data-admin-mode-btn="screenshots">Скриншоты</button>
             <button type="button" class="btn btn--ghost" data-admin-mode-btn="servers">Серверы</button>
+            <button type="button" class="btn btn--ghost" data-admin-mode-btn="launcher">Лаунчер</button>
           </div>
           <a
             class="btn btn--ghost admin-panel-close"
@@ -457,14 +495,32 @@
                   <span>Дата публикации</span>
                   <input id="f-date" name="publishedAt" type="datetime-local" />
                 </label>
-                <label class="admin-field" for="f-hero-layout">
+                <div class="admin-field">
                   <span>Расположение картинки в тексте (как на сайте)</span>
-                  <select id="f-hero-layout" name="heroLayout">
-                    <option value="tl">Слева сверху у текста</option>
-                    <option value="lc">Слева, ниже (по центру колонки)</option>
-                    <option value="br">Справа снизу</option>
-                  </select>
-                </label>
+                  <div class="cabinet-model-picker admin-hero-layout-picker">
+                    <input type="hidden" id="f-hero-layout" name="heroLayout" value="tl" />
+                    <button
+                      type="button"
+                      class="cabinet-model-picker__trigger"
+                      id="f-hero-layout-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-controls="f-hero-layout-menu"
+                    >
+                      <span id="f-hero-layout-label">Слева сверху у текста</span>
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    <div class="cabinet-model-picker__menu" id="f-hero-layout-menu" role="listbox">
+                      <button type="button" role="option" data-hero-layout="tl" class="is-selected">
+                        Слева сверху у текста
+                      </button>
+                      <button type="button" role="option" data-hero-layout="lc">
+                        Слева, ниже (по центру колонки)
+                      </button>
+                      <button type="button" role="option" data-hero-layout="br">Справа снизу</button>
+                    </div>
+                  </div>
+                </div>
                 <label class="admin-field" for="f-image">
                   <span>Картинка (справа в медиа нажмите «Выбрать» на миниатюре или вставьте URL)</span>
                   <input id="f-image-id" name="imageId" type="hidden" />
@@ -608,6 +664,155 @@
               <p class="admin-msg" id="server-list-msg" role="status"></p>
             </div>
           </div>
+
+          <div id="admin-mode-launcher" class="admin-mode-panel admin-news-grid" hidden>
+            <div class="admin-panel">
+              <h2>Релиз лаунчера</h2>
+              <p class="admin-hint" style="margin-top: 0">
+                Версия и важность задают поведение приложения. Свой URL подменяет все ссылки «Скачать лаунчер» на сайте.
+              </p>
+              <form id="launcher-release-form">
+                <label class="admin-field" for="launcher-version">
+                  <span>Актуальная версия (semver)</span>
+                  <input id="launcher-version" name="latestVersion" type="text" required placeholder="1.2.3" autocomplete="off" />
+                </label>
+                <label class="admin-field" for="launcher-severity">
+                  <span>Важность (не показывается в лаунчере)</span>
+                  <select id="launcher-severity" name="updateSeverity">
+                    <option value="simple">Simple — можно отложить</option>
+                    <option value="critical">Critical — блокировка до обновления</option>
+                  </select>
+                </label>
+                <label class="mg-check admin-field--check" for="launcher-custom-url">
+                  <input id="launcher-custom-url" name="useCustomLauncherDownloadUrl" type="checkbox" />
+                  <span>Свой URL скачивания (все кнопки «Скачать лаунчер» на сайте)</span>
+                </label>
+                <label class="admin-field" for="launcher-download-url">
+                  <span>URL (https://…)</span>
+                  <input id="launcher-download-url" name="launcherDownloadUrl" type="url" placeholder="https://..." />
+                </label>
+                <fieldset class="admin-field admin-field--group">
+                  <legend>Клиент (манифест)</legend>
+                  <label class="admin-field" for="launcher-manifest-url">
+                    <span>URL манифеста</span>
+                    <input id="launcher-manifest-url" type="url" placeholder="https://..." autocomplete="off" />
+                  </label>
+                  <label class="admin-field" for="launcher-manifest-mirrors">
+                    <span>Зеркала (по одному URL на строку, по очереди)</span>
+                    <textarea id="launcher-manifest-mirrors" rows="3" placeholder="https://mirror1...&#10;https://mirror2..."></textarea>
+                  </label>
+                  <label class="mg-check admin-field--check" for="launcher-sync-strict">
+                    <input id="launcher-sync-strict" type="checkbox" />
+                    <span>Strict режим (иначе Soft)</span>
+                  </label>
+                  <p class="admin-hint">
+                    Soft: проверяет только <code>mods/**</code> и <code>versions/**</code>.<br />
+                    Strict: проверяет всё, кроме <code>shaderpacks/</code>, <code>saves/</code>, <code>screenshots/</code>,
+                    <code>logs/</code>, <code>config/</code>.
+                  </p>
+                </fieldset>
+                <div class="admin-actions">
+                  <button type="submit" class="btn btn--primary">Сохранить</button>
+                </div>
+                <p class="admin-msg" id="launcher-release-msg" role="status"></p>
+              </form>
+            </div>
+            <div class="admin-panel">
+              <h2>Модальное сообщение всем</h2>
+              <p class="admin-hint" style="margin-top: 0">
+                Одно активное сообщение. После сохранения ревизия растёт — лаунчер покажет снова тем, кто уже закрывал старое. Пустой текст = не показывать (ревизия всё равно обновится).
+              </p>
+              <form id="lm-broadcast-form">
+                <label class="admin-field" for="lm-b-title">
+                  <span>Заголовок (необязательно)</span>
+                  <input id="lm-b-title" type="text" maxlength="160" autocomplete="off" />
+                </label>
+                <label class="admin-field" for="lm-b-body">
+                  <span>Текст</span>
+                  <textarea id="lm-b-body" rows="5" maxlength="8000"></textarea>
+                </label>
+                <label class="mg-check admin-field--check" for="lm-b-cancel-visible">
+                  <input id="lm-b-cancel-visible" type="checkbox" checked />
+                  <span>Показывать кнопку «Отмена»</span>
+                </label>
+                <label class="admin-field" for="lm-b-cancel-label">
+                  <span>Подпись отмены</span>
+                  <input id="lm-b-cancel-label" type="text" value="Отмена" maxlength="48" />
+                </label>
+                <label class="admin-field" for="lm-b-primary-label">
+                  <span>Подпись основной кнопки</span>
+                  <input id="lm-b-primary-label" type="text" value="Ок" maxlength="48" />
+                </label>
+                <label class="admin-field" for="lm-b-primary-mode">
+                  <span>Действие основной кнопки</span>
+                  <select id="lm-b-primary-mode">
+                    <option value="dismiss">Закрыть (Ок)</option>
+                    <option value="open_url">Открыть ссылку (например «Перейти»)</option>
+                  </select>
+                </label>
+                <label class="admin-field" for="lm-b-primary-url">
+                  <span>URL для «Перейти»</span>
+                  <input id="lm-b-primary-url" type="url" placeholder="https://..." />
+                </label>
+                <div class="admin-actions">
+                  <button type="submit" class="btn btn--primary">Сохранить сообщение</button>
+                  <button type="button" class="btn btn--ghost" id="lm-broadcast-receipts-btn">Обновить список прочтений</button>
+                </div>
+                <p class="admin-msg" id="lm-broadcast-msg" role="status"></p>
+              </form>
+              <div id="lm-broadcast-receipts-wrap" class="admin-lm-receipts">
+                <h3 class="admin-subh">Прочитали текущую версию</h3>
+                <ul id="lm-broadcast-read" class="admin-lm-list"></ul>
+                <h3 class="admin-subh">Ещё не прочитали</h3>
+                <ul id="lm-broadcast-unread" class="admin-lm-list"></ul>
+              </div>
+              <h2 style="margin-top: 28px">Модальное сообщение пользователю</h2>
+              <p class="admin-hint" style="margin-top: 0">Одно сообщение на аккаунт. Ник — игровой логин (как в БД).</p>
+              <form id="lm-personal-form">
+                <label class="admin-field" for="lm-p-username">
+                  <span>Ник</span>
+                  <input id="lm-p-username" type="text" required placeholder="playerone" autocomplete="off" />
+                </label>
+                <label class="admin-field" for="lm-p-title">
+                  <span>Заголовок (необязательно)</span>
+                  <input id="lm-p-title" type="text" maxlength="160" autocomplete="off" />
+                </label>
+                <label class="admin-field" for="lm-p-body">
+                  <span>Текст</span>
+                  <textarea id="lm-p-body" rows="5" maxlength="8000"></textarea>
+                </label>
+                <label class="mg-check admin-field--check" for="lm-p-cancel-visible">
+                  <input id="lm-p-cancel-visible" type="checkbox" checked />
+                  <span>Показывать кнопку «Отмена»</span>
+                </label>
+                <label class="admin-field" for="lm-p-cancel-label">
+                  <span>Подпись отмены</span>
+                  <input id="lm-p-cancel-label" type="text" value="Отмена" maxlength="48" />
+                </label>
+                <label class="admin-field" for="lm-p-primary-label">
+                  <span>Подпись основной кнопки</span>
+                  <input id="lm-p-primary-label" type="text" value="Ок" maxlength="48" />
+                </label>
+                <label class="admin-field" for="lm-p-primary-mode">
+                  <span>Действие основной кнопки</span>
+                  <select id="lm-p-primary-mode">
+                    <option value="dismiss">Закрыть (Ок)</option>
+                    <option value="open_url">Открыть ссылку</option>
+                  </select>
+                </label>
+                <label class="admin-field" for="lm-p-primary-url">
+                  <span>URL для «Перейти»</span>
+                  <input id="lm-p-primary-url" type="url" placeholder="https://..." />
+                </label>
+                <div class="admin-actions">
+                  <button type="submit" class="btn btn--primary">Сохранить личное сообщение</button>
+                  <button type="button" class="btn btn--ghost" id="lm-personal-receipts-btn">Статус прочтения</button>
+                </div>
+                <p class="admin-msg" id="lm-personal-msg" role="status"></p>
+              </form>
+              <pre id="lm-personal-receipts-out" class="admin-lm-json" hidden></pre>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -639,6 +844,6 @@
       </div>
     </div>
     <script src="api-config.js?v=1"></script>
-    <script src="admin-news.js?v=20260485"></script>
+    <script src="admin-news.js?v=20260490"></script>
   </body>
 </html>

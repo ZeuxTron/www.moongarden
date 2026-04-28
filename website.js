@@ -379,8 +379,9 @@ window.initGallerySlider = function () {
     for (var s = 0; s < shots.length; s++) {
       var img = shots[s].querySelector("img");
       if (!img) continue;
+      var lb = img.getAttribute("data-lightbox-src");
       out.push({
-        src: img.currentSrc || img.src || "",
+        src: (lb && lb.trim()) || img.currentSrc || img.src || "",
         alt: img.getAttribute("alt") || "",
       });
     }
@@ -457,6 +458,8 @@ window.initNewsSlider = function (newsSection) {
   var index = 0;
   var autoTimer = null;
   var intervalMs = 7000;
+  /** Якорь вида #slug новости — не запускать автопрокрутку слайдов. */
+  var autoAdvanceDisabled = false;
   var disableAutoOnMobile = window.matchMedia("(max-width: 560px), (pointer: coarse)").matches;
   var hoverPaused = false;
   var isPointerDown = false;
@@ -492,6 +495,7 @@ window.initNewsSlider = function (newsSection) {
 
   function scheduleAuto() {
     stopAuto();
+    if (autoAdvanceDisabled) return;
     if (hoverPaused) return;
     if (disableAutoOnMobile) return;
     autoTimer = setInterval(function () {
@@ -516,8 +520,13 @@ window.initNewsSlider = function (newsSection) {
         dots[d].classList.toggle("is-active", d === index);
       }
     }
-    if (!hoverPaused) scheduleAuto();
-    else stopAuto();
+    if (autoAdvanceDisabled) {
+      stopAuto();
+    } else if (!hoverPaused) {
+      scheduleAuto();
+    } else {
+      stopAuto();
+    }
   }
 
   function indexFromHash() {
@@ -527,6 +536,26 @@ window.initNewsSlider = function (newsSection) {
       if (slides[i].id === h) return i;
     }
     return 0;
+  }
+
+  function hashMatchesNewsSlide() {
+    var h = window.location.hash.slice(1);
+    if (!h) return false;
+    for (var j = 0; j < slides.length; j++) {
+      if (slides[j].id === h) return true;
+    }
+    return false;
+  }
+
+  function scrollToHashNewsArticle() {
+    var hid = window.location.hash.slice(1);
+    if (!hid) return;
+    requestAnimationFrame(function () {
+      var el = document.getElementById(hid);
+      if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   }
 
   if (dotsRoot) {
@@ -616,11 +645,21 @@ window.initNewsSlider = function (newsSection) {
     });
   }
 
+  autoAdvanceDisabled = hashMatchesNewsSlide();
   go(indexFromHash());
+  if (autoAdvanceDisabled) {
+    stopAuto();
+    scrollToHashNewsArticle();
+  }
 };
 
 (function () {
-  function applyLauncherDownloadUrl() {
+  function apiBase() {
+    var b =
+      typeof window.__MG_API_BASE__ === "string" && String(window.__MG_API_BASE__).trim();
+    return (b ? b.replace(/\/$/, "") : "http://localhost:3000");
+  }
+  function applyLauncherDownloadUrlFromConfig() {
     var u =
       typeof window.__MG_LAUNCHER_DOWNLOAD_URL__ === "string" &&
       window.__MG_LAUNCHER_DOWNLOAD_URL__.trim();
@@ -629,7 +668,22 @@ window.initNewsSlider = function (newsSection) {
       a.setAttribute("href", u.trim());
     });
   }
-  applyLauncherDownloadUrl();
+  async function applyLauncherDownloadUrlFromApi() {
+    try {
+      var r = await fetch(apiBase() + "/launcher/release");
+      if (!r.ok) return;
+      var data = await r.json();
+      if (!data || !data.useCustomLauncherDownloadUrl) return;
+      var u = data.effectiveLauncherDownloadUrl;
+      if (typeof u !== "string" || !String(u).trim()) return;
+      var href = String(u).trim();
+      document.querySelectorAll("a[data-mg-launcher-download]").forEach(function (a) {
+        a.setAttribute("href", href);
+      });
+    } catch (e) {}
+  }
+  applyLauncherDownloadUrlFromConfig();
+  void applyLauncherDownloadUrlFromApi();
 })();
 
 (function () {
