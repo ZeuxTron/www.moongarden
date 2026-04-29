@@ -4,6 +4,39 @@
   var MG_REFRESH = "mg_refresh";
   var MG_USER = "mg_site_session";
   var SKIN_SLOT_COUNT = 6;
+
+  function mgSiteSessGet(k) {
+    try {
+      var v = localStorage.getItem(k);
+      if (v != null && v !== "") return v;
+      v = sessionStorage.getItem(k);
+      if (v != null && v !== "") {
+        try {
+          localStorage.setItem(k, v);
+        } catch (eMig) {}
+      }
+      return v;
+    } catch (e0) {
+      return null;
+    }
+  }
+  function mgSiteSessSet(k, v) {
+    var s = String(v != null ? v : "");
+    try {
+      localStorage.setItem(k, s);
+    } catch (e1) {}
+    try {
+      sessionStorage.setItem(k, s);
+    } catch (e2) {}
+  }
+  function mgSiteSessRemove(k) {
+    try {
+      localStorage.removeItem(k);
+    } catch (e3) {}
+    try {
+      sessionStorage.removeItem(k);
+    } catch (e4) {}
+  }
   var NICK_RE = /^[a-zA-Z0-9_]{3,16}$/;
 
   var modal = document.getElementById("account-modal");
@@ -80,32 +113,28 @@
   }
 
   function clearTokens() {
-    try {
-      sessionStorage.removeItem(MG_ACCESS);
-      sessionStorage.removeItem(MG_REFRESH);
-      sessionStorage.removeItem(MG_USER);
-    } catch (e) {}
+    mgSiteSessRemove(MG_ACCESS);
+    mgSiteSessRemove(MG_REFRESH);
+    mgSiteSessRemove(MG_USER);
   }
 
   function setTokens(access, refresh, username) {
-    try {
-      if (access) sessionStorage.setItem(MG_ACCESS, access);
-      if (refresh) sessionStorage.setItem(MG_REFRESH, refresh);
-      if (username) sessionStorage.setItem(MG_USER, username);
-    } catch (e) {}
+    if (access) mgSiteSessSet(MG_ACCESS, access);
+    if (refresh) mgSiteSessSet(MG_REFRESH, refresh);
+    if (username) mgSiteSessSet(MG_USER, username);
   }
 
   function getSession() {
-    return sessionStorage.getItem(MG_USER) || "";
+    return mgSiteSessGet(MG_USER) || "";
   }
 
   function setSession(nick) {
-    if (nick) sessionStorage.setItem(MG_USER, nick);
-    else sessionStorage.removeItem(MG_USER);
+    if (nick) mgSiteSessSet(MG_USER, nick);
+    else mgSiteSessRemove(MG_USER);
   }
 
   async function tryRefresh() {
-    var rt = sessionStorage.getItem(MG_REFRESH);
+    var rt = mgSiteSessGet(MG_REFRESH);
     if (!rt) return false;
     var r = await fetch(API_BASE + "/auth/refresh", {
       method: "POST",
@@ -128,7 +157,7 @@
     var isForm = Boolean(opts.formData);
     var headers = {};
     if (!isForm && opts.jsonBody !== undefined) headers["Content-Type"] = "application/json";
-    var access = sessionStorage.getItem(MG_ACCESS);
+    var access = mgSiteSessGet(MG_ACCESS);
     if (access && !skipAuth) headers["Authorization"] = "Bearer " + access;
     if (isForm && access && !skipAuth) headers["Authorization"] = "Bearer " + access;
 
@@ -950,10 +979,10 @@
   });
 
   async function bootstrapSession() {
-    if (!sessionStorage.getItem(MG_ACCESS) && sessionStorage.getItem(MG_REFRESH)) {
+    if (!mgSiteSessGet(MG_ACCESS) && mgSiteSessGet(MG_REFRESH)) {
       await tryRefresh();
     }
-    if (!sessionStorage.getItem(MG_ACCESS)) {
+    if (!mgSiteSessGet(MG_ACCESS)) {
       syncHeader();
       return;
     }
@@ -978,6 +1007,13 @@
   }
 
   window.addEventListener("hashchange", applyAccountDeepLinkFromHash);
+
+  window.addEventListener("storage", function (ev) {
+    if (!ev || !ev.key) return;
+    if (ev.key !== MG_ACCESS && ev.key !== MG_REFRESH && ev.key !== MG_USER) return;
+    syncHeader();
+    void bootstrapSession();
+  });
 
   // Show consistent header label from stored session immediately, then refine after refresh/me.
   syncHeader();

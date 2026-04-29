@@ -533,7 +533,7 @@ main {
   height: clamp(460px, 56vh, 640px);
   position: relative;
   z-index: 0;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   cursor: grab;
 }
 
@@ -1969,7 +1969,7 @@ body.site-modal-open {
   }
 
   .site-footer {
-    padding: 0 16px 20px;
+    padding: 0 16px max(20px, env(safe-area-inset-bottom, 0px));
   }
 
   .site-footer .server-meta {
@@ -2082,6 +2082,7 @@ body.site-modal-open {
   .site-footer {
     padding-left: 12px;
     padding-right: 12px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
 
   .server-card-inner {

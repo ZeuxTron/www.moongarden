@@ -156,6 +156,21 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+      .admin-news-page .admin-inline-picker.cabinet-model-picker {
+        width: 100%;
+        position: relative;
+      }
+      .admin-news-page .admin-inline-picker .cabinet-model-picker__trigger {
+        width: 100%;
+        min-width: 0;
+      }
+      .admin-news-page .admin-inline-picker .cabinet-model-picker__trigger span:first-child {
+        min-width: 0;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .admin-field textarea {
         min-height: 120px;
         resize: vertical;
@@ -627,6 +642,10 @@
                   <span>Название (h1 в `server-card-title-row`)</span>
                   <input id="server-title" name="title" type="text" required />
                 </label>
+                <label class="admin-field" for="server-slug">
+                  <span>Slug (стабильный ключ клиента, латиница/цифры/-/_)</span>
+                  <input id="server-slug" name="slug" type="text" required placeholder="main" autocomplete="off" />
+                </label>
                 <label class="admin-field" for="server-tagline">
                   <span>Теги (`server-tagline`) — вводите через запятую или «•»</span>
                   <input id="server-tagline" name="tagline" type="text" required placeholder="Magic, Tech, Exploration" />
@@ -642,6 +661,26 @@
                 <label class="admin-field" for="server-meta3">
                   <span>Метаданные 3 (dd: Последний запуск)</span>
                   <input id="server-meta3" name="meta3" type="text" required />
+                </label>
+                <label class="admin-field" for="server-mc-host">
+                  <span>IP сервера (host)</span>
+                  <input id="server-mc-host" name="mcHost" type="text" placeholder="play.example.com" autocomplete="off" />
+                </label>
+                <label class="admin-field" for="server-mc-port">
+                  <span>Порт сервера</span>
+                  <input id="server-mc-port" name="mcPort" type="number" min="1" max="65535" placeholder="25565" />
+                </label>
+                <label class="admin-field" for="server-manifest-url">
+                  <span>URL манифеста клиента для этой карточки</span>
+                  <input id="server-manifest-url" name="manifestUrl" type="url" placeholder="https://..." autocomplete="off" />
+                </label>
+                <label class="admin-field" for="server-manifest-mirrors">
+                  <span>Зеркала манифеста (по одному URL на строку)</span>
+                  <textarea id="server-manifest-mirrors" name="manifestMirrors" rows="3" placeholder="https://mirror1...&#10;https://mirror2..."></textarea>
+                </label>
+                <label class="mg-check admin-field--check" for="server-sync-strict">
+                  <input id="server-sync-strict" name="syncStrict" type="checkbox" />
+                  <span>Strict синхронизация клиента (иначе Soft)</span>
                 </label>
                 <label class="admin-field" for="server-order">
                   <span>Порядок (меньше = выше)</span>
@@ -669,20 +708,52 @@
             <div class="admin-panel">
               <h2>Релиз лаунчера</h2>
               <p class="admin-hint" style="margin-top: 0">
-                Версия и важность задают поведение приложения. Свой URL подменяет все ссылки «Скачать лаунчер» на сайте.
+                Версия для уведомления и минимально допустимая версия задают «мягкое» и жёсткое обновление. Свой URL подменяет ссылки «Скачать лаунчер» на сайте.
               </p>
               <form id="launcher-release-form">
                 <label class="admin-field" for="launcher-version">
-                  <span>Актуальная версия (semver)</span>
+                  <span>Версия для уведомления об обновлении (semver)</span>
                   <input id="launcher-version" name="latestVersion" type="text" required placeholder="1.2.3" autocomplete="off" />
                 </label>
-                <label class="admin-field" for="launcher-severity">
-                  <span>Важность (не показывается в лаунчере)</span>
-                  <select id="launcher-severity" name="updateSeverity">
-                    <option value="simple">Simple — можно отложить</option>
-                    <option value="critical">Critical — блокировка до обновления</option>
-                  </select>
+                <label class="admin-field" for="launcher-min-version">
+                  <span>Минимально допустимая версия (опционально)</span>
+                  <input
+                    id="launcher-min-version"
+                    name="minimumLauncherVersion"
+                    type="text"
+                    placeholder="1.0.0"
+                    autocomplete="off"
+                  />
+                  <span class="admin-hint" style="margin-top: 6px; display: block">
+                    Ниже этой версии лаунчер блокируется до обновления. Пусто — только «мягкое» уведомление (и legacy
+                    Critical без отдельного поля).
+                  </span>
                 </label>
+                <div class="admin-field">
+                  <span>Важность мягкого уведомления</span>
+                  <div class="cabinet-model-picker admin-inline-picker">
+                    <input type="hidden" id="launcher-severity" name="updateSeverity" value="simple" />
+                    <button
+                      type="button"
+                      class="cabinet-model-picker__trigger"
+                      id="launcher-severity-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-controls="launcher-severity-menu"
+                    >
+                      <span id="launcher-severity-label">Simple — можно отложить</span>
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    <div class="cabinet-model-picker__menu" id="launcher-severity-menu" role="listbox">
+                      <button type="button" role="option" data-value="simple" class="is-selected">
+                        Simple — можно отложить («Позже»)
+                      </button>
+                      <button type="button" role="option" data-value="critical">
+                        Legacy Critical — жёсткий минимум = эта версия, пока не задано отдельное поле минимума
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <label class="mg-check admin-field--check" for="launcher-custom-url">
                   <input id="launcher-custom-url" name="useCustomLauncherDownloadUrl" type="checkbox" />
                   <span>Свой URL скачивания (все кнопки «Скачать лаунчер» на сайте)</span>
@@ -743,20 +814,41 @@
                   <span>Подпись основной кнопки</span>
                   <input id="lm-b-primary-label" type="text" value="Ок" maxlength="48" />
                 </label>
-                <label class="admin-field" for="lm-b-primary-mode">
+                <div class="admin-field">
                   <span>Действие основной кнопки</span>
-                  <select id="lm-b-primary-mode">
-                    <option value="dismiss">Закрыть (Ок)</option>
-                    <option value="open_url">Открыть ссылку (например «Перейти»)</option>
-                  </select>
-                </label>
+                  <div class="cabinet-model-picker admin-inline-picker">
+                    <input type="hidden" id="lm-b-primary-mode" value="dismiss" />
+                    <button
+                      type="button"
+                      class="cabinet-model-picker__trigger"
+                      id="lm-b-primary-mode-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-controls="lm-b-primary-mode-menu"
+                    >
+                      <span id="lm-b-primary-mode-label">Закрыть (Ок)</span>
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    <div class="cabinet-model-picker__menu" id="lm-b-primary-mode-menu" role="listbox">
+                      <button type="button" role="option" data-value="dismiss" class="is-selected">Закрыть (Ок)</button>
+                      <button type="button" role="option" data-value="open_url">
+                        Открыть ссылку (например «Перейти»)
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <label class="admin-field" for="lm-b-primary-url">
                   <span>URL для «Перейти»</span>
                   <input id="lm-b-primary-url" type="url" placeholder="https://..." />
                 </label>
+                <label class="mg-check admin-field--check" for="lm-b-primary-in-launcher">
+                  <input id="lm-b-primary-in-launcher" type="checkbox" />
+                  <span>Внутри лаунчера</span>
+                </label>
                 <div class="admin-actions">
                   <button type="submit" class="btn btn--primary">Сохранить сообщение</button>
                   <button type="button" class="btn btn--ghost" id="lm-broadcast-receipts-btn">Обновить список прочтений</button>
+                  <button type="button" class="btn btn--ghost" id="lm-broadcast-delete-btn">Полностью удалить сообщение</button>
                 </div>
                 <p class="admin-msg" id="lm-broadcast-msg" role="status"></p>
               </form>
@@ -793,13 +885,27 @@
                   <span>Подпись основной кнопки</span>
                   <input id="lm-p-primary-label" type="text" value="Ок" maxlength="48" />
                 </label>
-                <label class="admin-field" for="lm-p-primary-mode">
+                <div class="admin-field">
                   <span>Действие основной кнопки</span>
-                  <select id="lm-p-primary-mode">
-                    <option value="dismiss">Закрыть (Ок)</option>
-                    <option value="open_url">Открыть ссылку</option>
-                  </select>
-                </label>
+                  <div class="cabinet-model-picker admin-inline-picker">
+                    <input type="hidden" id="lm-p-primary-mode" value="dismiss" />
+                    <button
+                      type="button"
+                      class="cabinet-model-picker__trigger"
+                      id="lm-p-primary-mode-trigger"
+                      aria-haspopup="listbox"
+                      aria-expanded="false"
+                      aria-controls="lm-p-primary-mode-menu"
+                    >
+                      <span id="lm-p-primary-mode-label">Закрыть (Ок)</span>
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    <div class="cabinet-model-picker__menu" id="lm-p-primary-mode-menu" role="listbox">
+                      <button type="button" role="option" data-value="dismiss" class="is-selected">Закрыть (Ок)</button>
+                      <button type="button" role="option" data-value="open_url">Открыть ссылку</button>
+                    </div>
+                  </div>
+                </div>
                 <label class="admin-field" for="lm-p-primary-url">
                   <span>URL для «Перейти»</span>
                   <input id="lm-p-primary-url" type="url" placeholder="https://..." />
@@ -807,6 +913,7 @@
                 <div class="admin-actions">
                   <button type="submit" class="btn btn--primary">Сохранить личное сообщение</button>
                   <button type="button" class="btn btn--ghost" id="lm-personal-receipts-btn">Статус прочтения</button>
+                  <button type="button" class="btn btn--ghost" id="lm-personal-delete-btn">Полностью удалить личное</button>
                 </div>
                 <p class="admin-msg" id="lm-personal-msg" role="status"></p>
               </form>

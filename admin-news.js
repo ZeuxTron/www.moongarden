@@ -51,10 +51,16 @@
   var serverEditId = document.getElementById("server-edit-id");
   var serverImage = document.getElementById("server-image");
   var serverTitle = document.getElementById("server-title");
+  var serverSlug = document.getElementById("server-slug");
   var serverTagline = document.getElementById("server-tagline");
   var serverMeta1 = document.getElementById("server-meta1");
   var serverMeta2 = document.getElementById("server-meta2");
   var serverMeta3 = document.getElementById("server-meta3");
+  var serverMcHost = document.getElementById("server-mc-host");
+  var serverMcPort = document.getElementById("server-mc-port");
+  var serverManifestUrl = document.getElementById("server-manifest-url");
+  var serverManifestMirrors = document.getElementById("server-manifest-mirrors");
+  var serverSyncStrict = document.getElementById("server-sync-strict");
   var serverOrder = document.getElementById("server-order");
   var serverVisible = document.getElementById("server-visible");
   var serverFormMsg = document.getElementById("server-form-msg");
@@ -64,6 +70,7 @@
 
   var launcherForm = document.getElementById("launcher-release-form");
   var launcherVersion = document.getElementById("launcher-version");
+  var launcherMinVersion = document.getElementById("launcher-min-version");
   var launcherSeverity = document.getElementById("launcher-severity");
   var launcherCustomUrl = document.getElementById("launcher-custom-url");
   var launcherDownloadUrl = document.getElementById("launcher-download-url");
@@ -77,9 +84,11 @@
   var lmBroadcastRead = document.getElementById("lm-broadcast-read");
   var lmBroadcastUnread = document.getElementById("lm-broadcast-unread");
   var lmBroadcastReceiptsBtn = document.getElementById("lm-broadcast-receipts-btn");
+  var lmBroadcastDeleteBtn = document.getElementById("lm-broadcast-delete-btn");
   var lmPersonalForm = document.getElementById("lm-personal-form");
   var lmPersonalMsg = document.getElementById("lm-personal-msg");
   var lmPersonalReceiptsBtn = document.getElementById("lm-personal-receipts-btn");
+  var lmPersonalDeleteBtn = document.getElementById("lm-personal-delete-btn");
   var lmPersonalReceiptsOut = document.getElementById("lm-personal-receipts-out");
 
   var mediaRoot = document.getElementById("admin-media-root");
@@ -136,11 +145,132 @@
 
   function token() {
     try {
-      return sessionStorage.getItem(MG_ACCESS) || "";
+      return localStorage.getItem(MG_ACCESS) || sessionStorage.getItem(MG_ACCESS) || "";
     } catch (e) {
       return "";
     }
   }
+
+  function bindAdminPicker(opts) {
+    var hidden = opts.hidden;
+    var trigger = opts.trigger;
+    var label = opts.label;
+    var menu = opts.menu;
+    var options = opts.options;
+    if ((!options || !options.length) && menu) {
+      options = menu.querySelectorAll('[role="option"]');
+    }
+    var defaultValue = opts.defaultValue != null ? String(opts.defaultValue) : "";
+    var normalize =
+      opts.normalize ||
+      function (v) {
+        return String(v || "");
+      };
+    var labels = opts.labels || {};
+    var onChange = opts.onChange;
+
+    function closeMenu() {
+      if (menu) menu.classList.remove("is-open");
+      if (trigger) trigger.setAttribute("aria-expanded", "false");
+    }
+
+    function applyValue(raw, silent) {
+      var v = normalize(raw != null ? raw : "");
+      if (hidden) hidden.value = v;
+      var lab = labels[v] != null ? labels[v] : labels[defaultValue] != null ? labels[defaultValue] : v;
+      if (label && lab != null && lab !== "") label.textContent = lab;
+      if (options && options.length) {
+        for (var i = 0; i < options.length; i++) {
+          var btn = options[i];
+          var ov = btn.getAttribute("data-value");
+          btn.classList.toggle("is-selected", ov === v);
+          btn.setAttribute("aria-selected", ov === v ? "true" : "false");
+        }
+      }
+      if (!silent && typeof onChange === "function") onChange(v);
+    }
+
+    if (trigger && menu) {
+      trigger.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var open = menu.classList.toggle("is-open");
+        trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      document.addEventListener("click", function (e) {
+        if (
+          menu.classList.contains("is-open") &&
+          !menu.contains(e.target) &&
+          !trigger.contains(e.target)
+        ) {
+          closeMenu();
+        }
+      });
+    }
+    if (options && options.length) {
+      for (var j = 0; j < options.length; j++) {
+        (function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var v = btn.getAttribute("data-value");
+            applyValue(v);
+            closeMenu();
+          });
+        })(options[j]);
+      }
+    }
+
+    if (hidden && hidden.value) applyValue(hidden.value, true);
+    else applyValue(defaultValue, true);
+
+    return { setValue: applyValue, closeMenu: closeMenu };
+  }
+
+  var pickerLauncherSeverity = bindAdminPicker({
+    hidden: launcherSeverity,
+    trigger: document.getElementById("launcher-severity-trigger"),
+    label: document.getElementById("launcher-severity-label"),
+    menu: document.getElementById("launcher-severity-menu"),
+    defaultValue: "simple",
+    normalize: function (v) {
+      return String(v || "").toLowerCase() === "critical" ? "critical" : "simple";
+    },
+    labels: {
+      simple: "Simple — можно отложить («Позже»)",
+      critical: "Legacy Critical — минимум = версия уведомления",
+    },
+  });
+
+  var pickerLmBPrimaryMode = bindAdminPicker({
+    hidden: document.getElementById("lm-b-primary-mode"),
+    trigger: document.getElementById("lm-b-primary-mode-trigger"),
+    label: document.getElementById("lm-b-primary-mode-label"),
+    menu: document.getElementById("lm-b-primary-mode-menu"),
+    defaultValue: "dismiss",
+    normalize: function (v) {
+      return String(v || "").toLowerCase() === "open_url" ? "open_url" : "dismiss";
+    },
+    labels: {
+      dismiss: "Закрыть (Ок)",
+      open_url: "Открыть ссылку (например «Перейти»)",
+    },
+  });
+
+  var pickerLmPPrimaryMode = bindAdminPicker({
+    hidden: document.getElementById("lm-p-primary-mode"),
+    trigger: document.getElementById("lm-p-primary-mode-trigger"),
+    label: document.getElementById("lm-p-primary-mode-label"),
+    menu: document.getElementById("lm-p-primary-mode-menu"),
+    defaultValue: "dismiss",
+    normalize: function (v) {
+      return String(v || "").toLowerCase() === "open_url" ? "open_url" : "dismiss";
+    },
+    labels: {
+      dismiss: "Закрыть (Ок)",
+      open_url: "Открыть ссылку",
+    },
+  });
 
   async function apiJson(method, path, bodyObj) {
     var headers = { Authorization: "Bearer " + token() };
@@ -374,10 +504,16 @@
     if (serverImage) serverImage.value = "";
     syncServerFileLabel();
     serverTitle.value = "";
+    if (serverSlug) serverSlug.value = "";
     serverTagline.value = "";
     serverMeta1.value = "";
     serverMeta2.value = "";
     serverMeta3.value = "";
+    if (serverMcHost) serverMcHost.value = "";
+    if (serverMcPort) serverMcPort.value = "";
+    if (serverManifestUrl) serverManifestUrl.value = "";
+    if (serverManifestMirrors) serverManifestMirrors.value = "";
+    if (serverSyncStrict) serverSyncStrict.checked = false;
     serverOrder.value = "0";
     serverVisible.checked = true;
     serverFormTitle.textContent = "Новая карточка сервера";
@@ -575,13 +711,21 @@
         left.innerHTML =
           "<strong>" +
           escapeHtml(item.title || "") +
-          '</strong><div class="meta">' +
+          '</strong><div class="meta">slug=' +
+          escapeHtml(item.slug || "") +
+          '</div><div class="meta">' +
           escapeHtml(item.tagline || "") +
           '</div><div class="meta">order=' +
           escapeHtml(String(item.order || 0)) +
           " · " +
           escapeHtml(item.isVisible ? "виден" : "скрыт") +
-          "</div>";
+          "</div>" +
+          (item.mcHost || item.mcPort
+            ? '<div class="meta">' +
+              escapeHtml(String(item.mcHost || "")) +
+              (item.mcPort != null ? ":" + escapeHtml(String(item.mcPort)) : "") +
+              "</div>"
+            : "");
         var actions = document.createElement("div");
         actions.style.display = "flex";
         actions.style.gap = "8px";
@@ -764,10 +908,22 @@
     if (serverImage) serverImage.value = "";
     syncServerFileLabel();
     serverTitle.value = item.title || "";
+    if (serverSlug) serverSlug.value = item.slug || "";
     serverTagline.value = item.tagline || "";
     serverMeta1.value = item.meta1 || "";
     serverMeta2.value = item.meta2 || "";
     serverMeta3.value = item.meta3 || "";
+    if (serverMcHost) serverMcHost.value = typeof item.mcHost === "string" ? item.mcHost : "";
+    if (serverMcPort) {
+      serverMcPort.value =
+        item.mcPort != null && Number.isFinite(Number(item.mcPort)) ? String(item.mcPort) : "";
+    }
+    if (serverManifestUrl) serverManifestUrl.value = item.manifestUrl || "";
+    if (serverManifestMirrors) {
+      var mirrors = Array.isArray(item.manifestMirrors) ? item.manifestMirrors : [];
+      serverManifestMirrors.value = mirrors.join("\n");
+    }
+    if (serverSyncStrict) serverSyncStrict.checked = String(item.syncMode || "").toLowerCase() === "strict";
     serverOrder.value = String(item.order || 0);
     serverVisible.checked = item.isVisible !== false;
     serverFormTitle.textContent = "Редактирование карточки сервера";
@@ -868,6 +1024,7 @@
       var elPl = document.getElementById("lm-b-primary-label");
       var elPm = document.getElementById("lm-b-primary-mode");
       var elPu = document.getElementById("lm-b-primary-url");
+      var elPil = document.getElementById("lm-b-primary-in-launcher");
       if (b) {
         if (elTitle) elTitle.value = b.title || "";
         if (elBody) elBody.value = b.body || "";
@@ -875,7 +1032,9 @@
         if (elCl) elCl.value = b.cancelLabel || "Отмена";
         if (elPl) elPl.value = b.primaryLabel || "Ок";
         if (elPm) elPm.value = b.primaryMode === "open_url" ? "open_url" : "dismiss";
+        if (pickerLmBPrimaryMode) pickerLmBPrimaryMode.setValue(elPm ? elPm.value : "dismiss", true);
         if (elPu) elPu.value = b.primaryUrl || "";
+        if (elPil) elPil.checked = b.primaryOpenInLauncher === true;
       } else {
         if (elTitle) elTitle.value = "";
         if (elBody) elBody.value = "";
@@ -883,7 +1042,9 @@
         if (elCl) elCl.value = "Отмена";
         if (elPl) elPl.value = "Ок";
         if (elPm) elPm.value = "dismiss";
+        if (pickerLmBPrimaryMode) pickerLmBPrimaryMode.setValue("dismiss", true);
         if (elPu) elPu.value = "";
+        if (elPil) elPil.checked = false;
       }
       await refreshLmBroadcastReceipts();
     } catch (e) {
@@ -901,8 +1062,17 @@
             ? String(data.latestVersion)
             : "";
       }
+      if (launcherMinVersion) {
+        launcherMinVersion.value =
+          data.minimumLauncherVersion != null && String(data.minimumLauncherVersion).trim()
+            ? String(data.minimumLauncherVersion).trim()
+            : "";
+      }
       if (launcherSeverity) {
         launcherSeverity.value = data.updateSeverity === "critical" ? "critical" : "simple";
+      }
+      if (pickerLauncherSeverity && launcherSeverity) {
+        pickerLauncherSeverity.setValue(launcherSeverity.value, true);
       }
       if (launcherCustomUrl) launcherCustomUrl.checked = !!data.useCustomLauncherDownloadUrl;
       if (launcherDownloadUrl) {
@@ -1167,6 +1337,7 @@
         : [];
       await apiJson("PUT", "/admin/launcher-release", {
         latestVersion: launcherVersion ? launcherVersion.value.trim() : "",
+        minimumLauncherVersion: launcherMinVersion ? launcherMinVersion.value.trim() : "",
         updateSeverity: launcherSeverity ? launcherSeverity.value : "simple",
         useCustomLauncherDownloadUrl: !!(launcherCustomUrl && launcherCustomUrl.checked),
         launcherDownloadUrl: launcherDownloadUrl ? launcherDownloadUrl.value.trim() : "",
@@ -1187,6 +1358,7 @@
       setLmBroadcastMsg("");
       try {
         var elCv = document.getElementById("lm-b-cancel-visible");
+        var elPil = document.getElementById("lm-b-primary-in-launcher");
         await apiJson("PUT", "/admin/launcher-messages/broadcast", {
           title: (document.getElementById("lm-b-title") || {}).value || "",
           body: (document.getElementById("lm-b-body") || {}).value || "",
@@ -1195,6 +1367,7 @@
           primaryLabel: (document.getElementById("lm-b-primary-label") || {}).value || "Ок",
           primaryMode: (document.getElementById("lm-b-primary-mode") || {}).value || "dismiss",
           primaryUrl: (document.getElementById("lm-b-primary-url") || {}).value || "",
+          primaryOpenInLauncher: !!(elPil && elPil.checked),
         });
         setLmBroadcastMsg("Сохранено. Ревизия увеличена — лаунчеры покажут сообщение заново непрочитавшим.");
         await loadLauncherMessagesAdmin();
@@ -1206,6 +1379,19 @@
   if (lmBroadcastReceiptsBtn) {
     lmBroadcastReceiptsBtn.addEventListener("click", function () {
       void refreshLmBroadcastReceipts();
+    });
+  }
+  if (lmBroadcastDeleteBtn) {
+    lmBroadcastDeleteBtn.addEventListener("click", async function () {
+      setLmBroadcastMsg("");
+      if (!confirm("Полностью удалить общее сообщение из БД?")) return;
+      try {
+        await apiJson("DELETE", "/admin/launcher-messages/broadcast");
+        setLmBroadcastMsg("Общее сообщение удалено.");
+        await loadLauncherMessagesAdmin();
+      } catch (err) {
+        setLmBroadcastMsg(err.message || String(err), true);
+      }
     });
   }
   if (lmPersonalForm) {
@@ -1254,6 +1440,27 @@
       }
     });
   }
+  if (lmPersonalDeleteBtn) {
+    lmPersonalDeleteBtn.addEventListener("click", async function () {
+      setLmPersonalMsg("");
+      var nick = ((document.getElementById("lm-p-username") || {}).value || "").trim().toLowerCase();
+      if (!nick) {
+        setLmPersonalMsg("Укажите ник.", true);
+        return;
+      }
+      if (!confirm("Полностью удалить личное сообщение пользователя «" + nick + "» из БД?")) return;
+      try {
+        await apiJson("DELETE", "/admin/launcher-messages/personal/" + encodeURIComponent(nick));
+        setLmPersonalMsg("Личное сообщение удалено для «" + nick + "».");
+        if (lmPersonalReceiptsOut) {
+          lmPersonalReceiptsOut.hidden = true;
+          lmPersonalReceiptsOut.textContent = "";
+        }
+      } catch (err) {
+        setLmPersonalMsg(err.message || String(err), true);
+      }
+    });
+  }
 
   serverForm.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -1268,10 +1475,16 @@
       .filter(Boolean)
       .join(" • ");
     fd.append("title", serverTitle.value.trim());
+    if (serverSlug) fd.append("slug", serverSlug.value.trim());
     fd.append("tagline", tagline);
     fd.append("meta1", serverMeta1.value.trim());
     fd.append("meta2", serverMeta2.value.trim());
     fd.append("meta3", serverMeta3.value.trim());
+    if (serverMcHost) fd.append("mcHost", serverMcHost.value.trim());
+    if (serverMcPort) fd.append("mcPort", String(serverMcPort.value || "").trim());
+    if (serverManifestUrl) fd.append("manifestUrl", serverManifestUrl.value.trim());
+    if (serverManifestMirrors) fd.append("manifestMirrors", serverManifestMirrors.value || "");
+    if (serverSyncStrict) fd.append("syncMode", serverSyncStrict.checked ? "strict" : "soft");
     fd.append("order", String(Number(serverOrder.value || 0)));
     fd.append("isVisible", serverVisible.checked ? "true" : "false");
     if (serverImage.files && serverImage.files[0]) {
