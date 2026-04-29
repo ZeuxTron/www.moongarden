@@ -466,7 +466,9 @@ window.initNewsSlider = function (newsSection) {
   var pointerStartX = 0;
   var pointerStartY = 0;
   var pointerId = null;
-  var swipeThreshold = 48;
+  var coarsePointer =
+    typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  var swipeThreshold = coarsePointer ? 36 : 48;
 
   function isInteractiveTarget(target) {
     if (!target || !target.closest) return false;
