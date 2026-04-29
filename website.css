@@ -533,7 +533,8 @@ main {
   height: clamp(460px, 56vh, 640px);
   position: relative;
   z-index: 0;
-  touch-action: pan-x pan-y;
+  /* Только вертикаль отдаём браузеру (скролл текста внутри слайда); горизонталь остаётся для pointer-свайпа в JS. */
+  touch-action: pan-y;
   cursor: grab;
 }
 
@@ -574,6 +575,7 @@ main {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: auto;
+  touch-action: pan-y;
   padding-right: 6px;
   box-sizing: border-box;
 }
@@ -1827,7 +1829,7 @@ body.site-modal-open {
   position: relative;
   z-index: 3;
   margin-top: 8px;
-  padding: 0 24px 28px;
+  padding: 0 24px 32px;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
@@ -1969,7 +1971,7 @@ body.site-modal-open {
   }
 
   .site-footer {
-    padding: 0 16px max(20px, env(safe-area-inset-bottom, 0px));
+    padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
   }
 
   .site-footer .server-meta {
@@ -2082,7 +2084,8 @@ body.site-modal-open {
   .site-footer {
     padding-left: 12px;
     padding-right: 12px;
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    /* Базовые 32px как у .site-footer + safe-area. */
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
   }
 
   .server-card-inner {
