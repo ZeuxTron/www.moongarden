@@ -763,6 +763,21 @@
                   <input id="launcher-download-url" name="launcherDownloadUrl" type="url" placeholder="https://..." />
                 </label>
                 <fieldset class="admin-field admin-field--group">
+                  <legend>Дефолтная карточка сервера (fallback)</legend>
+                  <label class="mg-check admin-field--check" for="launcher-default-server-enabled">
+                    <input id="launcher-default-server-enabled" type="checkbox" />
+                    <span>Включить дефолтную карточку, если список серверов пустой</span>
+                  </label>
+                  <label class="admin-field" for="launcher-default-server-mc-host">
+                    <span>MC Host</span>
+                    <input id="launcher-default-server-mc-host" type="text" placeholder="mc.example.com" autocomplete="off" />
+                  </label>
+                  <label class="admin-field" for="launcher-default-server-mc-port">
+                    <span>MC Port</span>
+                    <input id="launcher-default-server-mc-port" type="number" min="1" max="65535" placeholder="25565" />
+                  </label>
+                </fieldset>
+                <fieldset class="admin-field admin-field--group">
                   <legend>Клиент (манифест)</legend>
                   <label class="admin-field" for="launcher-manifest-url">
                     <span>URL манифеста</span>

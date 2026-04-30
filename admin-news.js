@@ -74,6 +74,9 @@
   var launcherSeverity = document.getElementById("launcher-severity");
   var launcherCustomUrl = document.getElementById("launcher-custom-url");
   var launcherDownloadUrl = document.getElementById("launcher-download-url");
+  var launcherDefaultServerEnabled = document.getElementById("launcher-default-server-enabled");
+  var launcherDefaultServerMcHost = document.getElementById("launcher-default-server-mc-host");
+  var launcherDefaultServerMcPort = document.getElementById("launcher-default-server-mc-port");
   var launcherManifestUrl = document.getElementById("launcher-manifest-url");
   var launcherManifestMirrors = document.getElementById("launcher-manifest-mirrors");
   var launcherSyncStrict = document.getElementById("launcher-sync-strict");
@@ -967,6 +970,13 @@
     launcherDownloadUrl.required = on;
   }
 
+  function syncLauncherDefaultServerFields() {
+    if (!launcherDefaultServerEnabled) return;
+    var on = !!launcherDefaultServerEnabled.checked;
+    if (launcherDefaultServerMcHost) launcherDefaultServerMcHost.disabled = !on;
+    if (launcherDefaultServerMcPort) launcherDefaultServerMcPort.disabled = !on;
+  }
+
   function setLmBroadcastMsg(text, isError) {
     if (!lmBroadcastMsg) return;
     lmBroadcastMsg.textContent = text || "";
@@ -1078,6 +1088,16 @@
       if (launcherDownloadUrl) {
         launcherDownloadUrl.value = data.launcherDownloadUrl ? String(data.launcherDownloadUrl) : "";
       }
+      if (launcherDefaultServerEnabled) launcherDefaultServerEnabled.checked = !!data.defaultServerCardEnabled;
+      if (launcherDefaultServerMcHost) {
+        launcherDefaultServerMcHost.value = data.defaultServerMcHost ? String(data.defaultServerMcHost) : "";
+      }
+      if (launcherDefaultServerMcPort) {
+        launcherDefaultServerMcPort.value =
+          data.defaultServerMcPort != null && Number.isFinite(Number(data.defaultServerMcPort))
+            ? String(Number(data.defaultServerMcPort))
+            : "";
+      }
       if (launcherManifestUrl) {
         launcherManifestUrl.value = data.manifestUrl ? String(data.manifestUrl) : "";
       }
@@ -1095,6 +1115,7 @@
         launcherSyncStrict.checked = String(data.syncMode || "").toLowerCase() === "strict";
       }
       syncLauncherUrlField();
+      syncLauncherDefaultServerFields();
     } catch (e) {
       setLauncherMsg(e.message || String(e), true);
     }
@@ -1323,6 +1344,9 @@
   if (launcherCustomUrl) {
     launcherCustomUrl.addEventListener("change", syncLauncherUrlField);
   }
+  if (launcherDefaultServerEnabled) {
+    launcherDefaultServerEnabled.addEventListener("change", syncLauncherDefaultServerFields);
+  }
   launcherForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     setLauncherMsg("");
@@ -1341,6 +1365,9 @@
         updateSeverity: launcherSeverity ? launcherSeverity.value : "simple",
         useCustomLauncherDownloadUrl: !!(launcherCustomUrl && launcherCustomUrl.checked),
         launcherDownloadUrl: launcherDownloadUrl ? launcherDownloadUrl.value.trim() : "",
+        defaultServerCardEnabled: !!(launcherDefaultServerEnabled && launcherDefaultServerEnabled.checked),
+        defaultServerMcHost: launcherDefaultServerMcHost ? launcherDefaultServerMcHost.value.trim() : "",
+        defaultServerMcPort: launcherDefaultServerMcPort ? launcherDefaultServerMcPort.value.trim() : "",
         manifestUrl: launcherManifestUrl ? launcherManifestUrl.value.trim() : "",
         manifestMirrors: mirrorsLines,
         syncMode: launcherSyncStrict && launcherSyncStrict.checked ? "strict" : "soft",
@@ -1537,5 +1564,6 @@
     await loadServerList();
     await loadMediaList();
     syncLauncherUrlField();
+    syncLauncherDefaultServerFields();
   })();
 })();
